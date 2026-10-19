@@ -34,6 +34,7 @@ from pathlib import Path
 from dca.config import Config
 from dca.logging import get_logger
 from dca.rules.attack import extract_techniques
+from dca.rules.condition import parse_condition
 from dca.rules.fields import extract_fields
 from dca.rules.loader import RuleSet, load_rules
 from dca.telemetry.profile import CorpusProfile
@@ -67,6 +68,14 @@ class RuleFinding:
     rare_fields: tuple[tuple[str, float], ...] = ()
     shape_warnings: tuple[str, ...] = ()
     detail: str = ""
+    # How many alternative ways the rule's condition offers to fire, and how
+    # many of those are blocked by a missing field. A rule is only blind when
+    # every branch is blocked.
+    branches_total: int = 1
+    branches_blocked: int = 0
+    # False when the condition could not be parsed and every selection was
+    # therefore treated as required, which can only over report blindness.
+    condition_exact: bool = True
 
 
 @dataclass(frozen=True)
@@ -139,39 +148,91 @@ def _assess_rule(rule, profile: CorpusProfile, config: Config) -> RuleFinding:
         )
 
     observed = profile.fields_for(source_key)
-    missing = sorted(f for f in rule_fields.fields if f not in observed)
-    if missing:
+
+    # Resolve per branch of the condition rather than over the union of every
+    # selection. A rule written to match either Sysmon or EventID 4688 field
+    # names fires on an estate that has one of them, and treating all its fields
+    # as required would report it blind. See rules/condition.py.
+    detection = rule.raw.get("detection") or {}
+    selection_names = [str(k) for k in detection if k != "condition"] if isinstance(detection, dict) else []
+    parsed = parse_condition(detection.get("condition") if isinstance(detection, dict) else None, selection_names)
+
+    branch_fields: list[frozenset[str]] = []
+    for branch in parsed.branches:
+        fields: set[str] = set()
+        for selection in branch:
+            fields |= rule_fields.by_selection.get(selection, frozenset())
+        branch_fields.append(frozenset(fields))
+    if not branch_fields:
+        branch_fields = [rule_fields.fields]
+
+    branch_missing = [sorted(f for f in fields if f not in observed) for fields in branch_fields]
+    satisfiable = [i for i, missing in enumerate(branch_missing) if not missing]
+    blocked = len(branch_missing) - len(satisfiable)
+
+    if not satisfiable:
+        # Every branch has a missing field, so nothing can fire. Report the
+        # fields missing from the branch that comes closest.
+        best = min(branch_missing, key=len)
+        detail = (
+            f"{len(best)} of {len(rule_fields.fields)} referenced fields never appear in {source_key}"
+        )
+        if len(branch_missing) > 1:
+            detail += f"; all {len(branch_missing)} condition branches are blocked"
+        if not parsed.exact:
+            detail += "; condition could not be parsed, so every selection was treated as required"
         return RuleFinding(
             **common,
             verdict=Verdict.MISSING_FIELD,
-            missing_fields=tuple(missing),
-            detail=f"{len(missing)} of {len(rule_fields.fields)} referenced fields never appear in {source_key}",
+            missing_fields=tuple(best),
+            detail=detail,
+            branches_total=len(branch_missing),
+            branches_blocked=blocked,
+            condition_exact=parsed.exact,
         )
 
+    # At least one branch can fire. Judge rarity over the satisfiable branches.
+    live_fields = sorted({f for i in satisfiable for f in branch_fields[i]})
     rare = tuple(
         (f, observed[f].presence)
-        for f in sorted(rule_fields.fields)
+        for f in live_fields
         if observed[f].presence < config.rare_field_threshold
     )
     shape_warnings = tuple(
         f"{f} is stored as one dotted key, not a nested object"
-        for f in sorted(rule_fields.fields)
+        for f in live_fields
         if observed[f].literal_dotted_key
     )
+    partial = ""
+    if blocked:
+        partial = (
+            f"; {blocked} of {len(branch_missing)} condition branches are blocked "
+            "by a missing field, the rest can fire"
+        )
+
     if rare:
         return RuleFinding(
             **common,
             verdict=Verdict.RARE_FIELD,
             rare_fields=rare,
             shape_warnings=shape_warnings,
-            detail=f"{len(rare)} referenced fields fall below the {config.rare_field_threshold:.3%} presence threshold",
+            detail=(
+                f"{len(rare)} referenced fields fall below the "
+                f"{config.rare_field_threshold:.3%} presence threshold{partial}"
+            ),
+            branches_total=len(branch_missing),
+            branches_blocked=blocked,
+            condition_exact=parsed.exact,
         )
 
     return RuleFinding(
         **common,
         verdict=Verdict.RESOLVED,
         shape_warnings=shape_warnings,
-        detail="every referenced field is present above the threshold",
+        detail=f"every referenced field is present above the threshold{partial}",
+        branches_total=len(branch_missing),
+        branches_blocked=blocked,
+        condition_exact=parsed.exact,
     )
 
 

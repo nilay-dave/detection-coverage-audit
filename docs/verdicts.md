@@ -24,6 +24,42 @@ present, the technique shows green on the heatmap, and the rule can never fire.
 That single mismatch accounts for most of the blind techniques in the bundled
 example. It is the reason this tool exists.
 
+## Condition branches
+
+A rule's condition decides which of its selections have to match, and the audit
+resolves each alternative separately. This is real detection content, not a
+contrived case:
+
+```yaml
+detection:
+  selection_sysmon:
+    Image|endswith: '\powershell.exe'
+  selection_4688:
+    NewProcessName|endswith: '\powershell.exe'
+  condition: selection_sysmon or selection_4688
+```
+
+On an estate collecting Windows Security EventID 4688 that rule fires through
+`selection_4688`. Resolving the union of every field would report it
+`missing_field` because `Image` is absent, which is wrong, and wrong in the
+direction that makes the tool look careless to the people who write rules well.
+
+A rule is blind only when every branch its condition offers is blocked. The
+report shows the branch count and how many are blocked, so a rule that fires
+through one of two paths is visibly different from one that fires through both.
+
+A negated selection is a filter. Its fields do not need to be present for the
+rule to fire, so they never make a rule look blind.
+
+An aggregation tail after a pipe, `| count() by host > 5`, is ignored, because it
+changes when a rule fires rather than which fields it reads.
+
+When a condition cannot be parsed, the audit falls back to requiring every
+selection, which is the old behaviour, and says so on the finding. A parse
+failure can therefore only make the audit more pessimistic, never more
+permissive. See [ADR-005](adr/adr-005-tolerant-yaml-over-pysigma.md) for why
+this parser exists rather than pySigma's.
+
 ## Why `rare_field` is not blind
 
 A field present in 0.04% of its source's events is not missing. A rule keyed on

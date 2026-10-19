@@ -15,6 +15,7 @@ are different findings with different fixes.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dataclasses import field as dc_field
 
 from dca.rules.loader import LoadedRule
 
@@ -24,6 +25,11 @@ class RuleFields:
     rule_id: str
     fields: frozenset[str]
     keyword_only: bool
+    # Field references per named selection, so the engine can resolve only the
+    # selections a rule's condition actually requires. See rules/condition.py.
+    by_selection: dict[str, frozenset[str]] = dc_field(default_factory=dict)
+    # Selections that are a bare keyword search and name no field.
+    keyword_selections: frozenset[str] = frozenset()
 
 
 def _walk(node: object, found: set[str]) -> bool:
@@ -48,10 +54,12 @@ def _walk(node: object, found: set[str]) -> bool:
 
 
 def extract_fields(rule: LoadedRule) -> RuleFields:
-    """Return the set of field names referenced by a rule's detection block."""
+    """Return the field names referenced by a rule, in total and per selection."""
     detection = rule.raw.get("detection")
     found: set[str] = set()
     keyword_seen = False
+    by_selection: dict[str, frozenset[str]] = {}
+    keyword_selections: set[str] = set()
 
     if isinstance(detection, dict):
         for name, selection in detection.items():
@@ -60,7 +68,18 @@ def extract_fields(rule: LoadedRule) -> RuleFields:
             if isinstance(selection, list) and all(not isinstance(i, (dict, list)) for i in selection):
                 # A selection that is a flat list of scalars is a keyword search.
                 keyword_seen = True
+                keyword_selections.add(str(name))
+                by_selection[str(name)] = frozenset()
                 continue
-            keyword_seen |= _walk(selection, found)
+            per_selection: set[str] = set()
+            keyword_seen |= _walk(selection, per_selection)
+            by_selection[str(name)] = frozenset(per_selection)
+            found |= per_selection
 
-    return RuleFields(rule_id=rule.rule_id, fields=frozenset(found), keyword_only=not found and keyword_seen)
+    return RuleFields(
+        rule_id=rule.rule_id,
+        fields=frozenset(found),
+        keyword_only=not found and keyword_seen,
+        by_selection=by_selection,
+        keyword_selections=frozenset(keyword_selections),
+    )
