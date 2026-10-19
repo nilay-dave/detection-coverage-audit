@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Replace the GitHub identity placeholder across the repository in one pass.
 #
-# Every URL in this repository carries __GITHUB_USERNAME__ rather than a real
+# Every URL in this repository carries a placeholder rather than a real
 # account, so the repo can be built before the account is known and then bound
 # to it in one commit. Run this once, read the diff, then commit.
 #
@@ -19,6 +19,11 @@ fi
 
 USERNAME="$1"
 
+# Assembled from parts so this script does not contain the literal placeholder.
+# The first version did, so running it rewrote its own search pattern and the
+# second run silently did nothing useful.
+PLACEHOLDER="__GITHUB""_USERNAME__"
+
 if [[ ! "$USERNAME" =~ ^[A-Za-z0-9]([A-Za-z0-9-]{0,37}[A-Za-z0-9])?$ ]]; then
   echo "error: '$USERNAME' is not a valid GitHub username" >&2
   exit 2
@@ -26,18 +31,18 @@ fi
 
 cd "$(dirname "$0")/.."
 
-FILES=$(git grep -l '__GITHUB_USERNAME__' || true)
+FILES=$(git grep -l "$PLACEHOLDER" -- . ":!tools/set_identity.sh" || true)
 if [[ -z "$FILES" ]]; then
   echo "no placeholders found, identity is already set"
   exit 0
 fi
 
 COUNT=$(echo "$FILES" | wc -l | tr -d ' ')
-echo "rewriting __GITHUB_USERNAME__ to $USERNAME in $COUNT file(s):"
+echo "rewriting $PLACEHOLDER to $USERNAME in $COUNT file(s):"
 echo "$FILES" | sed 's/^/  /'
 
 echo "$FILES" | while read -r file; do
-  [[ -n "$file" ]] && perl -pi -e "s/__GITHUB_USERNAME__/${USERNAME}/g" "$file"
+  [[ -n "$file" ]] && PH="$PLACEHOLDER" UN="$USERNAME" perl -pi -e 's/\Q$ENV{PH}\E/$ENV{UN}/g' "$file"
 done
 
 git config user.name "Nilay Dave"
