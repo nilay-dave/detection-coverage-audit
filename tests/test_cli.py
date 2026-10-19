@@ -1,10 +1,10 @@
 import json
 
+from tests.conftest import write_corpus
 from typer.testing import CliRunner
 
 from dca import __version__
 from dca.cli import app
-from tests.conftest import write_corpus
 
 runner = CliRunner()
 

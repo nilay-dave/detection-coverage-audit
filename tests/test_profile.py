@@ -1,7 +1,7 @@
 import pytest
+from tests.conftest import write_corpus
 
 from dca.telemetry.profile import profile_corpus
-from tests.conftest import write_corpus
 
 
 def test_missing_corpus_raises(tmp_path, config):

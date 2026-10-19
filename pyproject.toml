@@ -46,11 +46,22 @@ testpaths = ["tests"]
 addopts = "-q"
 
 [tool.ruff]
-line-length = 100
+# 120 rather than 88 or 100. Typer declares each CLI option on one line with its
+# help text, and wrapping those to 100 columns splits a single declaration
+# across four lines for no gain in readability.
+line-length = 120
 src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Typer declares options as call expressions in parameter defaults. That is the
+# library's documented interface, not an accident.
+"src/dca/cli.py" = ["B008"]
+# Test bodies carry inline rule and event literals. Wrapping them to 100
+# columns hurts readability more than the long lines do.
+"tests/*" = ["E501"]
 
 [tool.coverage.run]
 source = ["src/dca"]

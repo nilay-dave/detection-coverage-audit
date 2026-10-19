@@ -95,7 +95,11 @@ def main() -> int:
     for failure in failures:
         print(f"  FAIL  {failure}", file=sys.stderr)
     if failures:
-        print(f"\n{len(failures)} number(s) out of date. Run make report and update the README.", file=sys.stderr)
+        print(
+            f"\n{len(failures)} number(s) out of date. "
+            "Run make report and update the README.",
+            file=sys.stderr,
+        )
         return 1
     print("all published numbers match measured values")
     return 0

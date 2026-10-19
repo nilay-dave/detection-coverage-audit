@@ -3,7 +3,6 @@ import json
 import duckdb
 import pytest
 
-from dca.config import Config
 from dca.telemetry.generator import generate
 from dca.telemetry.profile import profile_corpus
 from dca.telemetry.schemas import load_spec

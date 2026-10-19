@@ -26,8 +26,9 @@ understate it, so it is its own category.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field as dc_field
-from enum import Enum
+from dataclasses import dataclass
+from dataclasses import field as dc_field
+from enum import StrEnum
 from pathlib import Path
 
 from dca.config import Config
@@ -40,7 +41,7 @@ from dca.telemetry.profile import CorpusProfile
 log = get_logger(__name__)
 
 
-class Verdict(str, Enum):
+class Verdict(StrEnum):
     RESOLVED = "resolved"
     RARE_FIELD = "rare_field"
     MISSING_FIELD = "missing_field"

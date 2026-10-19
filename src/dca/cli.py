@@ -13,7 +13,8 @@ from pathlib import Path
 import typer
 
 from dca import __version__
-from dca.audit.engine import Verdict, audit as run_audit
+from dca.audit.engine import Verdict
+from dca.audit.engine import audit as run_audit
 from dca.config import load_config
 from dca.logging import configure, get_logger
 from dca.report.render import render_html, render_json, to_dict
@@ -36,8 +37,10 @@ def _version_callback(value: bool) -> None:
 
 @app.callback()
 def main(
-    version: bool = typer.Option(False, "--version", callback=_version_callback, is_eager=True, help="Print the version and exit."),
-    log_level: str = typer.Option("INFO", "--log-level", help="Log level for the structured JSON log on stderr."),
+    version: bool = typer.Option(
+        False, "--version", callback=_version_callback, is_eager=True, help="Print the version and exit."
+    ),
+    log_level: str = typer.Option("INFO", "--log-level", help="Log level for the structured log on stderr."),
 ) -> None:
     configure(log_level.upper())
 
@@ -88,7 +91,7 @@ def audit(
 def gate(
     rules: Path = typer.Option(..., "--rules", exists=True, help="Directory of Sigma rules."),
     telemetry: Path = typer.Option(..., "--telemetry", exists=True, help="Parquet telemetry corpus."),
-    max_blind_pct: float = typer.Option(50.0, "--max-blind-pct", help="Fail above this percentage of blind techniques."),
+    max_blind_pct: float = typer.Option(50.0, "--max-blind-pct", help="Fail above this blind technique pct."),
     max_unparseable: int = typer.Option(0, "--max-unparseable", min=0, help="Fail above this many unparseable rules."),
 ) -> None:
     """Exit non zero when coverage falls below a threshold. For use in CI."""

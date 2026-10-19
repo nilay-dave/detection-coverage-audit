@@ -70,11 +70,11 @@ def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path, re
         if reuse and corpus.exists():
             gen = {"repeats": 0, "min_s": None, "median_s": None, "max_s": None, "reused": True}
         else:
-            gen = _time(lambda: generate(corpus, size, seed=7).events, repeats=1)
+            gen = _time(lambda c=corpus, n=size: generate(c, n, seed=7).events, repeats=1)
             gen.pop("value", None)
-        prof = _time(lambda: profile_corpus(corpus, config), repeats=repeats)
+        prof = _time(lambda c=corpus: profile_corpus(c, config), repeats=repeats)
         profile = prof.pop("value")
-        aud = _time(lambda: audit(rules_dir, profile, config), repeats=repeats)
+        aud = _time(lambda pr=profile: audit(rules_dir, pr, config), repeats=repeats)
         result = aud.pop("value")
 
         scenarios.append({
@@ -95,7 +95,10 @@ def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path, re
         })
         if not reuse:
             corpus.unlink(missing_ok=True)
-        print(f"  {size:>12,} events  profile {prof['median_s']:>7.3f}s  audit {aud['median_s']:>7.3f}s  blind {result.blind_technique_pct:.1f}%")
+        print(
+            f"  {size:>12,} events  profile {prof['median_s']:>7.3f}s  "
+            f"audit {aud['median_s']:>7.3f}s  blind {result.blind_technique_pct:.1f}%"
+        )
 
     return {
         "hardware": _hardware(),
@@ -112,7 +115,9 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=REPEATS)
     parser.add_argument("--rules", type=Path, default=Path(__file__).resolve().parents[1] / "rules")
     parser.add_argument("--workdir", type=Path, default=Path("data/generated/bench"))
-    parser.add_argument("--reuse", action="store_true", help="Reuse and keep corpora in workdir instead of regenerating.")
+    parser.add_argument(
+        "--reuse", action="store_true", help="Reuse and keep corpora in workdir instead of regenerating."
+    )
     args = parser.parse_args()
 
     print(f"benchmarking {len(args.sizes)} corpus sizes, {args.repeats} repeats each")

@@ -37,7 +37,8 @@ log = get_logger(__name__)
 
 CHUNK_ROWS = 50_000
 
-_HOSTS = [f"WKS-{i:04d}" for i in range(1, 240)] + [f"SRV-{i:03d}" for i in range(1, 60)]
+_HOSTS = [f"WKS-{i:04d}" for i in range(1, 240)]
+_HOSTS += [f"SRV-{i:03d}" for i in range(1, 60)]
 _USERS = ["jdoe", "asmith", "svc_backup", "svc_sql", "mpatel", "rlee", "administrator", "kchen"]
 _BINARIES = [
     r"C:\Windows\System32\cmd.exe",
@@ -47,7 +48,13 @@ _BINARIES = [
     r"C:\Windows\System32\schtasks.exe",
     r"C:\Windows\explorer.exe",
 ]
-_DOMAINS = ["updates.contoso.com", "login.microsoftonline.com", "cdn.jsdelivr.net", "api.github.com", "telemetry.example.net"]
+_DOMAINS = [
+    "updates.contoso.com",
+    "login.microsoftonline.com",
+    "cdn.jsdelivr.net",
+    "api.github.com",
+    "telemetry.example.net",
+]
 _REGPATHS = [
     r"HKLM\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters",
     r"HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Run",
@@ -79,7 +86,9 @@ def _value(spec: FieldSpec, rng: random.Random) -> object:
         return rng.choice(_REGPATHS)
     if kind == "cmdline":
         binary = rng.choice(_BINARIES)
-        tail = rng.choice(["", " /c dir", " -NoProfile -Command Get-Service", " /create /tn Updater", " -enc UwB0AGEAcgB0AA=="])
+        tail = rng.choice(
+            ["", " /c dir", " -NoProfile -Command Get-Service", " /create /tn Updater", " -enc UwB0AGEAcgB0AA=="]
+        )
         return f'"{binary}"{tail}'
     if kind == "pid":
         return rng.randrange(400, 65000)
@@ -88,7 +97,9 @@ def _value(spec: FieldSpec, rng: random.Random) -> object:
     if kind == "arn":
         return f"arn:aws:iam::{rng.randrange(10**11, 10**12)}:user/{rng.choice(_USERS)}"
     if kind == "policyarn":
-        return rng.choice(["arn:aws:iam::aws:policy/ReadOnlyAccess", "arn:aws:iam::aws:policy/AdministratorAccess"])
+        return rng.choice(
+            ["arn:aws:iam::aws:policy/ReadOnlyAccess", "arn:aws:iam::aws:policy/AdministratorAccess"]
+        )
     if kind == "domain":
         return rng.choice(_DOMAINS)
     if kind == "epoch":

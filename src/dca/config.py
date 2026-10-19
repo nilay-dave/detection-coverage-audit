@@ -36,6 +36,13 @@ class ConfigError(ValueError):
     """Raised when configuration is present but unusable."""
 
 
+def _report_template() -> Path:
+    override = os.environ.get("DCA_REPORT_TEMPLATE", "")
+    if override:
+        return Path(override)
+    return Path(__file__).parent / "report" / "templates" / "report.html.j2"
+
+
 @dataclass(frozen=True)
 class Config:
     """Runtime configuration for an audit run."""
@@ -53,9 +60,7 @@ class Config:
 
     duckdb_threads: int = field(default_factory=lambda: _env_int("DCA_DUCKDB_THREADS", 4))
 
-    report_template: Path = field(
-        default_factory=lambda: Path(os.environ.get("DCA_REPORT_TEMPLATE", "")) or Path(__file__).parent / "report" / "templates" / "report.html.j2"
-    )
+    report_template: Path = field(default_factory=lambda: _report_template())
 
     def __post_init__(self) -> None:
         if not 0.0 <= self.rare_field_threshold < 1.0:
