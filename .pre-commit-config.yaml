@@ -28,6 +28,12 @@ repos:
         language: system
         types: [text]
 
+      - id: commit-subject-length
+        name: commit subject at most 72 characters
+        entry: python tools/check_commit_subject.py
+        language: system
+        stages: [commit-msg]
+
       - id: schema-shares
         name: telemetry source shares sum to one
         entry: python -c "import sys; sys.path.insert(0,'src'); from dca.telemetry.schemas import load_spec; load_spec()"
