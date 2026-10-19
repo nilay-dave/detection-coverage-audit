@@ -7,6 +7,10 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Added
+- Condition aware coverage resolution. A rule is now blind only when every branch its condition offers is blocked, so a rule written to match either Sysmon or EventID 4688 field names is no longer reported blind on an estate that collects one of them. Handles `and`, `or`, `not`, parentheses and the `of` forms; a negated selection is treated as a filter and requires no fields; an aggregation tail after a pipe is ignored. An unparseable condition falls back to requiring every selection, so a parse failure can only over report blindness. This moves the bundled pack's headline number from 66.7 to 63.0 percent by correctly resolving a rule whose missing field was only ever referenced inside a filter.
+- Findings now carry `branches_total`, `branches_blocked` and `condition_exact`, all surfaced in the HTML report.
+
 ### Removed
 - The `pysigma` dependency, which was declared and advertised in the README but never imported. It was measured and found unsuitable: it aborts a whole collection when one rule in it is malformed, and an unparseable rule is a finding this tool has to report rather than crash on. ADR-005 records the measurement and the error.
 
