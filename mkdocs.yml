@@ -1,0 +1,52 @@
+site_name: detection-coverage-audit
+site_description: Find ATT&CK techniques covered on paper but blind in production.
+repo_url: https://github.com/__GITHUB_USERNAME__/detection-coverage-audit
+repo_name: __GITHUB_USERNAME__/detection-coverage-audit
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue grey
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - toc.follow
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+nav:
+  - Overview: index.md
+  - How the audit works: how-it-works.md
+  - Verdicts: verdicts.md
+  - Decisions:
+      - ADR-001 Sampled field presence: adr/adr-001-sampled-field-presence.md
+      - ADR-002 DuckDB over Elasticsearch: adr/adr-002-duckdb-over-elasticsearch.md
+      - ADR-003 Chunked DataFrame insert: adr/adr-003-chunked-dataframe-insert.md
+      - ADR-004 Bounded batch profiling: adr/adr-004-bounded-batch-profiling.md
+  - Example report: report.html

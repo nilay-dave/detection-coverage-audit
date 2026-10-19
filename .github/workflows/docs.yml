@@ -1,0 +1,36 @@
+name: docs
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install
+        run: |
+          pip install -e ".[dev]"
+          pip install mkdocs-material
+
+      - name: Generate the example report the docs link to
+        run: |
+          dca generate-telemetry --events 200000 --out data/generated/docs.parquet --seed 7
+          dca audit --rules rules --telemetry data/generated/docs.parquet \
+            --out docs/report.html --json docs/audit.json
+
+      - name: Build and deploy
+        run: mkdocs gh-deploy --force
