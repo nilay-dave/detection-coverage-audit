@@ -1,0 +1,105 @@
+"""Fail when a number published in the README no longer matches a measured one.
+
+Every figure in README.md that this tool knows about is tagged in the source
+with an HTML comment so the check is explicit rather than a regex hunt through
+prose:
+
+    <!--number:audit.blind_technique_pct-->66.7<!--/number-->
+
+The value between the markers must equal the value at that dotted path in
+docs/metrics.json, which tools/collect_metrics.py regenerates from executed
+code. CI runs collect_metrics.py and then this script, so a number that drifts
+breaks the build rather than quietly misleading a reader.
+
+Usage:
+    python tools/check_numbers.py [--readme README.md] [--metrics docs/metrics.json]
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+PATTERN = re.compile(r"<!--number:([a-zA-Z0-9_.\[\]]+)-->(.*?)<!--/number-->", re.DOTALL)
+TOLERANCE = 0.05
+
+
+def resolve(payload: dict, dotted: str):
+    """Walk a dotted path, supporting [index] for lists."""
+    node = payload
+    for part in dotted.split("."):
+        match = re.fullmatch(r"([a-zA-Z0-9_]+)\[(\d+)\]", part)
+        if match:
+            node = node[match.group(1)][int(match.group(2))]
+        else:
+            node = node[part]
+    return node
+
+
+def normalise(value) -> str:
+    if isinstance(value, float):
+        return f"{value:g}"
+    if isinstance(value, int):
+        return f"{value:,}"
+    return str(value)
+
+
+def check(readme: Path, metrics: Path) -> list[str]:
+    if not metrics.exists():
+        return [f"{metrics} does not exist. Run tools/collect_metrics.py first."]
+
+    payload = json.loads(metrics.read_text(encoding="utf-8"))
+    text = readme.read_text(encoding="utf-8")
+    failures: list[str] = []
+    checked = 0
+
+    for match in PATTERN.finditer(text):
+        path, published = match.group(1), match.group(2).strip()
+        checked += 1
+        try:
+            measured = resolve(payload, path)
+        except (KeyError, IndexError, TypeError):
+            failures.append(f"{path}: not present in {metrics.name}")
+            continue
+
+        published_clean = published.replace(",", "").replace("%", "").strip()
+        try:
+            published_number = float(published_clean)
+            measured_number = float(measured)
+            if abs(published_number - measured_number) > TOLERANCE:
+                failures.append(
+                    f"{path}: README says {published}, measured {normalise(measured)}"
+                )
+        except (TypeError, ValueError):
+            if published != str(measured):
+                failures.append(f"{path}: README says {published!r}, measured {measured!r}")
+
+    if checked == 0:
+        failures.append(f"no tagged numbers found in {readme.name}, the check is not wired up")
+    else:
+        print(f"checked {checked} published numbers against {metrics.name}")
+    return failures
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--readme", type=Path, default=ROOT / "README.md")
+    parser.add_argument("--metrics", type=Path, default=ROOT / "docs" / "metrics.json")
+    args = parser.parse_args()
+
+    failures = check(args.readme, args.metrics)
+    for failure in failures:
+        print(f"  FAIL  {failure}", file=sys.stderr)
+    if failures:
+        print(f"\n{len(failures)} number(s) out of date. Run make report and update the README.", file=sys.stderr)
+        return 1
+    print("all published numbers match measured values")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
