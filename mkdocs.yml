@@ -49,4 +49,5 @@ nav:
       - ADR-002 DuckDB over Elasticsearch: adr/adr-002-duckdb-over-elasticsearch.md
       - ADR-003 Chunked DataFrame insert: adr/adr-003-chunked-dataframe-insert.md
       - ADR-004 Bounded batch profiling: adr/adr-004-bounded-batch-profiling.md
+      - ADR-005 Tolerant YAML over pySigma: adr/adr-005-tolerant-yaml-over-pysigma.md
   - Example report: report.html

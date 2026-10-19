@@ -86,3 +86,42 @@ def test_non_rule_files_are_ignored(rule_factory):
     ruleset = load_rules(directory)
     assert len(ruleset) == 1
     assert not ruleset.errors
+
+
+def test_broken_rule_does_not_prevent_loading_good_ones(rule_factory):
+    """The reason this loader does not use pySigma.
+
+    pySigma aborts a whole collection when one rule in it is malformed, so a
+    single placeholder file in a 500 rule pack would mean the audit reports
+    nothing. Here the broken file becomes a finding and the valid rule still
+    loads. See ADR-005.
+    """
+    directory = rule_factory(
+        {"title": "valid", "id": "good",
+         "logsource": {"product": "windows", "category": "process_creation"},
+         "detection": {"selection": {"EventID": 4688}, "condition": "selection"}},
+        name="good.yml",
+    )
+    (directory / "no_detection.yml").write_text(
+        "title: placeholder\nid: broken\nlogsource: {product: windows}\n", encoding="utf-8"
+    )
+    (directory / "malformed.yml").write_text("title: [unclosed\n  bad: :", encoding="utf-8")
+
+    ruleset = load_rules(directory)
+    assert [r.rule_id for r in ruleset.rules] == ["good"]
+    assert len(ruleset.errors) == 2
+    reasons = sorted(e.reason.split(":")[0] for e in ruleset.errors)
+    assert reasons == ["invalid yaml", "rule has no detection block"]
+
+
+def test_loader_accepts_a_rule_pysigma_would_reject(rule_factory):
+    """A rule with a status value outside the Sigma specification still has
+    readable field references, so it is not this tool's job to reject it."""
+    directory = rule_factory({
+        "title": "odd status", "id": "odd", "status": "homegrown",
+        "logsource": {"product": "windows", "category": "process_creation"},
+        "detection": {"selection": {"EventID": 4688}, "condition": "selection"},
+        "tags": ["attack.t1059", "internal.owner.soc-team"]})
+    ruleset = load_rules(directory)
+    assert len(ruleset) == 1
+    assert not ruleset.errors

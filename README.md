@@ -74,7 +74,7 @@ corpus larger than memory does not abort the run.
 | --- | --- | --- |
 | Python 3.11+ | Core, CLI, tooling | The automation language this problem is already solved in badly, by hand, in most SOCs |
 | DuckDB | Field presence scan over parquet | `json_tree` gives recursive field extraction in SQL, and a library means no cluster to operate. See ADR-002 |
-| pySigma | Rule format reference | The detection as code format the industry standardized on, so the tool reads what teams already have |
+| PyYAML | Sigma rule parsing | pySigma was measured and rejected: it aborts a whole collection when one rule is malformed, and an unparseable rule is a finding this tool must report. See ADR-005 |
 | Typer | CLI with three verbs | Typed arguments and subcommands with a small dependency surface |
 | Jinja2 | HTML report | The report is an artifact a lead reads in a review, not terminal output |
 | pandas | Chunked corpus generation | Chunked DataFrame insert measured 22 times faster end to end than `executemany`. See ADR-003 |
@@ -157,6 +157,7 @@ Four decisions in [`docs/adr/`](docs/adr/), each with the options rejected and w
 - [ADR-002](docs/adr/adr-002-duckdb-over-elasticsearch.md): the boring choice. DuckDB over Elasticsearch, a library over a cluster, and what that buys in testability.
 - [ADR-003](docs/adr/adr-003-chunked-dataframe-insert.md): chunked DataFrame insert over `executemany`, with the 2,403 against 53,938 events per second that forced it.
 - [ADR-004](docs/adr/adr-004-bounded-batch-profiling.md): bounded batch profiling, and the out of memory error at 10M events that caused it.
+- [ADR-005](docs/adr/adr-005-tolerant-yaml-over-pysigma.md): why the loader parses YAML itself instead of using pySigma, with the error pySigma raises on a pack containing one broken rule.
 
 ## Intentionally out of scope
 
@@ -182,6 +183,14 @@ scope for a coverage question.
 **Non Sigma rule formats.** Splunk SPL and KQL rule sets are not parsed. The
 field extraction interface is one function, so adding a parser is small work,
 and it is deferred until someone has a corpus to test it against.
+
+**Full Sigma semantics.** The loader reads the detection block as YAML and takes
+field names from it. It does not build a Sigma abstract syntax tree, resolve
+field mapping pipelines, or evaluate backend conversion. pySigma does all three
+and was measured and rejected for this tool's purpose; ADR-005 has the reason
+and the error. If the audit ever needs to answer a question about rule semantics
+rather than field references, pySigma is the right dependency to add back, for
+the valid subset of a rule pack only.
 
 ## Security and compliance
 

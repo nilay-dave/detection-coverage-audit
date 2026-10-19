@@ -7,6 +7,21 @@ this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [Unreleased]
 
+### Removed
+- The `pysigma` dependency, which was declared and advertised in the README but never imported. It was measured and found unsuitable: it aborts a whole collection when one rule in it is malformed, and an unparseable rule is a finding this tool has to report rather than crash on. ADR-005 records the measurement and the error.
+
+### Added
+- ADR-005 on parsing Sigma rules as YAML rather than with pySigma.
+- Two loader tests: one asserting a broken rule does not prevent valid rules in the same directory from loading, one asserting a rule with a non specification `status` value is still readable.
+- `tools/check_commit_subject.py` as a commit-msg hook enforcing the 72 character subject limit.
+- `tools/set_identity.sh` to bind repository URLs to a GitHub account in one pass.
+- `scripts/provenance_check.py`, which audits the repository's own provenance signals: history shape, badge liveness, releases, language mix, description length and house style.
+
+### Fixed
+- `dca --version` reported 0.1.0 at the v0.3.0 tag, because the version was declared in both `pyproject.toml` and `__init__.py`. The package now reads it from its own metadata.
+- `tools/check_dashes.py` held the forbidden characters as literals, so the one file whose job is to enforce the no-dash rule tripped its own check.
+- `tools/set_identity.sh` contained the literal placeholder it searches for, so the first run rewrote its own search pattern.
+
 ## [0.3.0] - 2026-10-19
 
 Hardening, measured benchmarks and docs. This is the first release whose
