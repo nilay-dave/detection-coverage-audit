@@ -29,6 +29,12 @@ from dca.logging import get_logger
 
 log = get_logger(__name__)
 
+# Rows profiled per batch. The leaf expansion produces roughly one row per field
+# per event, and deduplicating them needs memory proportional to the batch, not
+# to the corpus. Profiling a 10M event corpus in one statement exceeded DuckDB's
+# default memory budget; see ADR-004.
+BATCH_ROWS = 1_000_000
+
 
 @dataclass(frozen=True)
 class FieldPresence:
@@ -64,17 +70,15 @@ class CorpusProfile:
 
 # Flattens a JSON event into dotted leaf paths. json_tree gives one row per node;
 # a node with no children and a non-null key path is a leaf the rule can match.
-# Profiles the `sampled` view, which is materialized once by profile_corpus so
-# that the field counts and the per source counts describe the same rows. Two
-# independent USING SAMPLE clauses would draw two different samples.
+# Profiles one batch of the `sampled` table, which profile_corpus materializes
+# once so that the field counts and the per source counts describe the same
+# rows. Two independent USING SAMPLE clauses would draw two different samples.
 _PROFILE_SQL = """
 WITH src AS (
     -- rowid rather than a row_number window: the window sorts the whole corpus
     -- for no benefit, and only row identity is needed here.
     SELECT rowid AS rid, logsource_key, event FROM sampled
-),
-counts AS (
-    SELECT logsource_key, count(*) AS events_in_source FROM src GROUP BY 1
+    WHERE rowid >= ? AND rowid < ?
 ),
 leaves AS (
     -- DISTINCT here plus count(*) below, rather than count(DISTINCT rid) in the
@@ -99,16 +103,15 @@ leaves AS (
       AND t.key IS NOT NULL
 )
 SELECT
-    l.logsource_key,
-    l.field,
+    logsource_key,
+    field,
     count(*) AS events_with_field,
-    c.events_in_source,
-    max(l.literal_dotted_key) AS literal_dotted_key
-FROM leaves l
-JOIN counts c USING (logsource_key)
-GROUP BY 1, 2, 4
-ORDER BY 1, 2
+    max(literal_dotted_key) AS literal_dotted_key
+FROM leaves
+GROUP BY 1, 2
 """
+
+_SOURCE_COUNT_SQL = "SELECT logsource_key, count(*) FROM sampled GROUP BY 1"
 
 
 def profile_corpus(parquet_path: Path | str, config: Config) -> CorpusProfile:
@@ -145,23 +148,40 @@ def profile_corpus(parquet_path: Path | str, config: Config) -> CorpusProfile:
             [path_str],
         )
 
-    rows = con.execute(_PROFILE_SQL).fetchall()
-    source_rows = con.execute(
-        "SELECT logsource_key, count(*) FROM sampled GROUP BY 1"
-    ).fetchall()
+    source_rows = con.execute(_SOURCE_COUNT_SQL).fetchall()
+    source_counts = {k: int(v) for k, v in source_rows}
+    rows_in_table = sum(source_counts.values())
+
+    # Accumulate per batch. Each batch's leaf set is deduplicated inside DuckDB,
+    # and the per field tallies are summed here, so peak memory is set by
+    # BATCH_ROWS rather than by corpus size. Counting an event once per field is
+    # exact across batches because a batch is a contiguous rowid range and no
+    # event spans two batches.
+    tally: dict[tuple[str, str], int] = {}
+    dotted_flags: dict[tuple[str, str], bool] = {}
+    batches = 0
+    for start in range(0, rows_in_table, BATCH_ROWS):
+        batches += 1
+        for logsource_key, field, with_field, dotted in con.execute(
+            _PROFILE_SQL, [start, start + BATCH_ROWS]
+        ).fetchall():
+            key = (logsource_key, field)
+            tally[key] = tally.get(key, 0) + int(with_field)
+            dotted_flags[key] = dotted_flags.get(key, False) or bool(dotted)
     con.close()
 
     presence: dict[str, dict[str, FieldPresence]] = {}
-    for logsource_key, field, with_field, in_source, dotted in rows:
+    for (logsource_key, field), with_field in tally.items():
         presence.setdefault(logsource_key, {})[field] = FieldPresence(
             logsource_key=logsource_key,
             field=field,
-            events_with_field=int(with_field),
-            events_in_source=int(in_source),
-            literal_dotted_key=bool(dotted),
+            events_with_field=with_field,
+            events_in_source=source_counts[logsource_key],
+            literal_dotted_key=dotted_flags[(logsource_key, field)],
         )
-
-    source_counts = {k: int(v) for k, v in source_rows}
+    for source_presence in presence.values():
+        for name in sorted(source_presence):
+            source_presence[name] = source_presence.pop(name)
     sampled = sum(source_counts.values())
 
     log.info(
@@ -171,6 +191,7 @@ def profile_corpus(parquet_path: Path | str, config: Config) -> CorpusProfile:
             "sampled_events": sampled,
             "sources": len(source_counts),
             "distinct_fields": sum(len(v) for v in presence.values()),
+            "batches": batches,
         },
     )
     return CorpusProfile(
