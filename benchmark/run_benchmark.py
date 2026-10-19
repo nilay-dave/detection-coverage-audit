@@ -59,7 +59,7 @@ def _time(fn, repeats: int = REPEATS) -> dict:
     }
 
 
-def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path) -> dict:
+def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path, reuse: bool = False) -> dict:
     configure("WARNING")
     config = Config()
     workdir.mkdir(parents=True, exist_ok=True)
@@ -67,7 +67,11 @@ def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path) ->
 
     for size in sizes:
         corpus = workdir / f"bench_{size}.parquet"
-        gen = _time(lambda: generate(corpus, size, seed=7).events, repeats=1)
+        if reuse and corpus.exists():
+            gen = {"repeats": 0, "min_s": None, "median_s": None, "max_s": None, "reused": True}
+        else:
+            gen = _time(lambda: generate(corpus, size, seed=7).events, repeats=1)
+            gen.pop("value", None)
         prof = _time(lambda: profile_corpus(corpus, config), repeats=repeats)
         profile = prof.pop("value")
         aud = _time(lambda: audit(rules_dir, profile, config), repeats=repeats)
@@ -76,7 +80,7 @@ def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path) ->
         scenarios.append({
             "events": size,
             "corpus_bytes": corpus.stat().st_size,
-            "generate": {k: v for k, v in gen.items() if k != "value"},
+            "generate": gen,
             "profile": prof,
             "audit": aud,
             "end_to_end_median_s": round(prof["median_s"] + aud["median_s"], 4),
@@ -89,7 +93,8 @@ def run(sizes: tuple[int, ...], repeats: int, rules_dir: Path, workdir: Path) ->
             "blind_technique_pct": round(result.blind_technique_pct, 2),
             "verdict_counts": {v.value: result.count(v) for v in type(result.findings[0].verdict)},
         })
-        corpus.unlink(missing_ok=True)
+        if not reuse:
+            corpus.unlink(missing_ok=True)
         print(f"  {size:>12,} events  profile {prof['median_s']:>7.3f}s  audit {aud['median_s']:>7.3f}s  blind {result.blind_technique_pct:.1f}%")
 
     return {
@@ -107,10 +112,11 @@ def main() -> int:
     parser.add_argument("--repeats", type=int, default=REPEATS)
     parser.add_argument("--rules", type=Path, default=Path(__file__).resolve().parents[1] / "rules")
     parser.add_argument("--workdir", type=Path, default=Path("data/generated/bench"))
+    parser.add_argument("--reuse", action="store_true", help="Reuse and keep corpora in workdir instead of regenerating.")
     args = parser.parse_args()
 
     print(f"benchmarking {len(args.sizes)} corpus sizes, {args.repeats} repeats each")
-    payload = run(tuple(args.sizes), args.repeats, args.rules, args.workdir)
+    payload = run(tuple(args.sizes), args.repeats, args.rules, args.workdir, reuse=args.reuse)
 
     RESULTS.mkdir(parents=True, exist_ok=True)
     out = RESULTS / "benchmark.json"
