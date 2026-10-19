@@ -1,0 +1,86 @@
+# Telemetry schema specification.
+#
+# This file describes what the onboarded log sources actually contain. It is the
+# ground truth the generator emits and the thing a real deployment would replace
+# with a sample of its own data.
+#
+# The shapes here are taken from published event documentation, not invented:
+#   - windows/process_creation models Security EventID 4688 with command line
+#     auditing enabled. It is NOT Sysmon EventID 1. The two carry different
+#     fields and most detection content is written against Sysmon.
+#   - aws/cloudtrail models the CloudTrail record envelope.
+#   - zeek/* model the stock Zeek log fields with no enrichment applied.
+#   - okta/system models the Okta System Log event.
+#
+# presence: 1.0 means the field is in every event. A fraction means the field is
+# only populated in that fraction of events, which is how optional and
+# conditionally populated fields behave in production.
+
+sources:
+  windows/process_creation:
+    share: 0.42
+    note: Security EventID 4688 with command line auditing on. Sysmon is not deployed on this estate.
+    fields:
+      EventID: { presence: 1.0, kind: const, value: 4688 }
+      Computer: { presence: 1.0, kind: host }
+      SubjectUserName: { presence: 1.0, kind: user }
+      NewProcessName: { presence: 1.0, kind: path }
+      ParentProcessName: { presence: 1.0, kind: path }
+      CommandLine: { presence: 0.94, kind: cmdline }
+      TokenElevationType: { presence: 1.0, kind: choice, values: ["%%1936", "%%1937", "%%1938"] }
+      ProcessId: { presence: 1.0, kind: pid }
+
+  windows/system:
+    share: 0.08
+    note: Windows System channel, service control manager events.
+    fields:
+      EventID: { presence: 1.0, kind: choice, values: [7045, 7036, 7040] }
+      Computer: { presence: 1.0, kind: host }
+      ServiceName: { presence: 0.61, kind: word }
+      ServiceFileName: { presence: 0.58, kind: path }
+      ServiceType: { presence: 0.58, kind: word }
+
+  windows/registry_set:
+    share: 0.05
+    note: Registry auditing enabled on a subset of servers only.
+    fields:
+      EventID: { presence: 1.0, kind: const, value: 4657 }
+      Computer: { presence: 1.0, kind: host }
+      ObjectName: { presence: 1.0, kind: regpath }
+      SubjectUserName: { presence: 1.0, kind: user }
+      NewValue: { presence: 0.77, kind: word }
+
+  aws/cloudtrail:
+    share: 0.21
+    note: Organization trail, management events, data events disabled.
+    fields:
+      eventName: { presence: 1.0, kind: choice, values: ["ConsoleLogin", "AssumeRole", "CreateAccessKey", "AttachRolePolicy", "StopLogging", "DescribeInstances", "GetObject", "UpdateDetector"] }
+      eventSource: { presence: 1.0, kind: choice, values: ["signin.amazonaws.com", "sts.amazonaws.com", "iam.amazonaws.com", "cloudtrail.amazonaws.com", "ec2.amazonaws.com", "guardduty.amazonaws.com"] }
+      awsRegion: { presence: 1.0, kind: choice, values: ["us-east-1", "us-west-2", "eu-west-1"] }
+      sourceIPAddress: { presence: 1.0, kind: ip }
+      userIdentity.type: { presence: 1.0, kind: choice, values: ["IAMUser", "AssumedRole", "AWSService", "Root"] }
+      userIdentity.arn: { presence: 0.88, kind: arn }
+      requestParameters.policyArn: { presence: 0.04, kind: policyarn }
+      responseElements.ConsoleLogin: { presence: 0.09, kind: choice, values: ["Success", "Failure"] }
+
+  zeek/dns:
+    share: 0.14
+    note: Stock Zeek dns.log. No enrichment or derived fields are applied in the pipeline.
+    fields:
+      ts: { presence: 1.0, kind: epoch }
+      "id.orig_h": { presence: 1.0, kind: ip }
+      "id.resp_h": { presence: 1.0, kind: ip }
+      query: { presence: 0.97, kind: domain }
+      qtype_name: { presence: 0.97, kind: choice, values: ["A", "AAAA", "TXT", "PTR", "CNAME", "SRV"] }
+      rcode_name: { presence: 0.95, kind: choice, values: ["NOERROR", "NXDOMAIN", "SERVFAIL"] }
+
+  zeek/ssl:
+    share: 0.10
+    note: Stock Zeek ssl.log. Certificate validation is logged, destination enrichment is not.
+    fields:
+      ts: { presence: 1.0, kind: epoch }
+      "id.orig_h": { presence: 1.0, kind: ip }
+      "id.resp_h": { presence: 1.0, kind: ip }
+      server_name: { presence: 0.83, kind: domain }
+      validation_status: { presence: 0.71, kind: choice, values: ["ok", "self signed certificate", "unable to get local issuer certificate"] }
+      version: { presence: 1.0, kind: choice, values: ["TLSv12", "TLSv13"] }
