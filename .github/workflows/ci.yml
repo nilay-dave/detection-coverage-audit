@@ -1,0 +1,92 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: pip install -e ".[dev]"
+
+      - name: Lint
+        run: ruff check src tests tools benchmark
+
+      - name: Test
+        run: pytest --cov=dca --cov-report=term-missing --cov-report=xml --cov-fail-under=90
+
+      - name: Upload coverage xml
+        if: matrix.python-version == '3.13'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml
+          path: coverage.xml
+
+  numbers:
+    # Re-measures every number the README publishes and fails if any has drifted.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Measure
+        run: |
+          pytest --cov=dca --cov-report=xml -q
+          python benchmark/run_benchmark.py --sizes 100000 --repeats 1
+          python tools/collect_metrics.py
+      - name: Check published numbers
+        run: python tools/check_numbers.py
+
+  self-audit:
+    # The tool audits its own bundled rule pack, so a change that breaks the
+    # audit path fails CI even if the unit tests still pass.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - name: Install
+        run: pip install -e ".[dev]"
+      - name: Generate corpus and audit
+        run: |
+          dca generate-telemetry --events 200000 --out data/generated/ci.parquet --seed 7
+          dca audit --rules rules --telemetry data/generated/ci.parquet \
+            --out docs/report.html --json docs/audit.json
+      - name: Gate on the bundled pack's own known coverage
+        run: |
+          dca gate --rules rules --telemetry data/generated/ci.parquet \
+            --max-blind-pct 70 --max-unparseable 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: |
+            docs/report.html
+            docs/audit.json
