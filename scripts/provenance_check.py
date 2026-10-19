@@ -58,15 +58,33 @@ def check_history(report: Report) -> None:
     verdict = PASS if count >= 40 else WEAK if count >= 20 else FAIL
     report.add("commit count", verdict, f"{count} commits on HEAD, 40 or more expected for this size")
 
+    # Merge commits are excluded. Conventional Commits does not cover them, git
+    # generates their subject, and requiring "feat(x): merge" would be cargo
+    # cult. They are checked separately for a readable subject instead.
+    merges = {line for line in git("log", "--merges", "--format=%s").splitlines() if line}
     subjects = [line for line in git("log", "--format=%s").splitlines() if line]
-    bad = [s for s in subjects if not CONVENTIONAL.match(s)]
+    non_merge = [s for s in subjects if s not in merges]
+    bad = [s for s in non_merge if not CONVENTIONAL.match(s)]
     report.add(
         "conventional commits",
         PASS if not bad else FAIL,
-        "every subject parses" if not bad else f"{len(bad)} non conforming, first: {bad[0][:48]}",
+        f"all {len(non_merge)} non merge subjects parse"
+        if not bad
+        else f"{len(bad)} non conforming, first: {bad[0][:48]}",
     )
 
-    long_subjects = [s for s in subjects if len(s) > 72]
+    vague_merges = [s for s in merges if not s.startswith("Merge:") or len(s) < 20]
+    report.add(
+        "merge commits say what they merged",
+        PASS if merges and not vague_merges else WEAK if merges else PASS,
+        f"{len(merges)} merge commit(s), each naming the change"
+        if merges and not vague_merges
+        else f"{len(vague_merges)} merge subject(s) are a default or too short"
+        if merges
+        else "no merge commits, history is linear",
+    )
+
+    long_subjects = [s for s in non_merge if len(s) > 72]
     report.add(
         "subject length",
         PASS if not long_subjects else WEAK,
