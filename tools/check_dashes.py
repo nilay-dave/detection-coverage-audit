@@ -13,8 +13,16 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# em dash, en dash, figure dash, horizontal bar
-FORBIDDEN = {"—": "em dash", "–": "en dash", "‒": "figure dash", "―": "horizontal bar"}
+# Built from code points rather than literals so that this file, which the hook
+# runs over every other file, cannot itself trip the check it enforces. That is
+# not hypothetical: the first version of this table held the literal characters
+# and the provenance audit failed on this file.
+FORBIDDEN = {
+    chr(0x2014): "em dash",
+    chr(0x2013): "en dash",
+    chr(0x2012): "figure dash",
+    chr(0x2015): "horizontal bar",
+}
 SKIP_SUFFIXES = {".parquet", ".png", ".jpg", ".jpeg", ".gif", ".mp4", ".zip", ".whl", ".ico", ".woff2"}
 
 
