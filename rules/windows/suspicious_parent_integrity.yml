@@ -1,0 +1,16 @@
+title: Elevated Process From Medium Integrity Parent
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0008
+status: experimental
+description: Detects a high integrity process whose parent ran at medium integrity.
+logsource:
+  product: windows
+  category: process_creation
+detection:
+  selection:
+    IntegrityLevel: 'High'
+    ParentIntegrityLevel: 'Medium'
+  condition: selection
+level: medium
+tags:
+  - attack.privilege-escalation
+  - attack.t1548.002

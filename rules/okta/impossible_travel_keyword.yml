@@ -1,0 +1,16 @@
+title: Okta Suspicious Activity Reported
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0012
+status: experimental
+description: Keyword rule retained from a legacy content pack, kept to show keyword only coverage.
+logsource:
+  product: okta
+  service: system
+detection:
+  keywords:
+    - 'suspicious activity reported'
+    - 'impossible travel'
+  condition: keywords
+level: low
+tags:
+  - attack.initial-access
+  - attack.t1078

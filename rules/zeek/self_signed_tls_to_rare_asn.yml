@@ -1,0 +1,16 @@
+title: Self Signed TLS Certificate To Rare Destination
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000f
+status: experimental
+description: Detects outbound TLS using a self signed certificate toward an uncommon destination.
+logsource:
+  product: zeek
+  service: ssl
+detection:
+  selection:
+    validation_status: 'self signed certificate'
+    dest_asn_rarity|gte: 0.95
+  condition: selection
+level: medium
+tags:
+  - attack.command-and-control
+  - attack.t1573.002

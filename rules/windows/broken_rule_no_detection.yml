@@ -1,0 +1,10 @@
+title: Placeholder Rule Pending Content
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0013
+status: unsupported
+description: A rule file that was committed before its detection logic was written.
+logsource:
+  product: windows
+  category: process_creation
+level: informational
+tags:
+  - attack.execution

@@ -1,0 +1,17 @@
+title: Repeated MFA Push Denials
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0011
+status: experimental
+description: Detects repeated denied MFA push challenges against a single user.
+logsource:
+  product: okta
+  service: system
+detection:
+  selection:
+    eventType: 'user.authentication.auth_via_mfa'
+    outcome.result: 'FAILURE'
+    outcome.reason: 'INVALID_CREDENTIALS'
+  condition: selection
+level: medium
+tags:
+  - attack.credential-access
+  - attack.t1621

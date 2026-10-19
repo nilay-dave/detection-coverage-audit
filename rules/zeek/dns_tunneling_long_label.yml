@@ -1,0 +1,18 @@
+title: Possible DNS Tunneling Via Long Labels
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000e
+status: experimental
+description: Detects DNS queries with unusually long labels, a hallmark of tunneling.
+logsource:
+  product: zeek
+  service: dns
+detection:
+  selection:
+    query_length|gte: 60
+    qtype_name:
+      - 'TXT'
+      - 'NULL'
+  condition: selection
+level: medium
+tags:
+  - attack.exfiltration
+  - attack.t1048.003

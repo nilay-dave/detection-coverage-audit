@@ -1,0 +1,18 @@
+title: CloudTrail Logging Stopped
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000a
+status: stable
+description: Detects an attempt to stop or delete a CloudTrail trail.
+logsource:
+  product: aws
+  service: cloudtrail
+detection:
+  selection:
+    eventSource: 'cloudtrail.amazonaws.com'
+    eventName:
+      - 'StopLogging'
+      - 'DeleteTrail'
+  condition: selection
+level: critical
+tags:
+  - attack.defense-evasion
+  - attack.t1562.008

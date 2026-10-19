@@ -1,0 +1,17 @@
+title: Access Key Created For Another User
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000c
+status: experimental
+description: Detects a principal creating a long lived access key for a different user.
+logsource:
+  product: aws
+  service: cloudtrail
+detection:
+  selection:
+    eventName: 'CreateAccessKey'
+  condition: selection and not filter
+  filter:
+    userIdentity.userName: null
+level: medium
+tags:
+  - attack.persistence
+  - attack.t1098.001

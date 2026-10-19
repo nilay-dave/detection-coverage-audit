@@ -1,0 +1,19 @@
+title: GuardDuty Finding Suppressed Or Detector Disabled
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000d
+status: stable
+description: Detects suppression rules or detector changes that reduce GuardDuty visibility.
+logsource:
+  product: aws
+  service: cloudtrail
+detection:
+  selection:
+    eventSource: 'guardduty.amazonaws.com'
+    eventName:
+      - 'CreateFilter'
+      - 'UpdateDetector'
+      - 'DeleteDetector'
+  condition: selection
+level: high
+tags:
+  - attack.defense-evasion
+  - attack.t1562.001

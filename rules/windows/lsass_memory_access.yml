@@ -1,0 +1,18 @@
+title: LSASS Process Memory Access
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0002
+status: stable
+description: Detects a process opening a handle to LSASS with read access.
+logsource:
+  product: windows
+  category: process_access
+detection:
+  selection:
+    TargetImage|endswith: '\lsass.exe'
+    GrantedAccess:
+      - '0x1010'
+      - '0x1410'
+  condition: selection
+level: critical
+tags:
+  - attack.credential-access
+  - attack.t1003.001

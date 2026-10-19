@@ -1,0 +1,18 @@
+title: Remote Service Creation
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0003
+status: stable
+description: Detects service installation events that commonly follow lateral movement.
+logsource:
+  product: windows
+  service: system
+detection:
+  selection:
+    EventID: 7045
+    ServiceFileName|contains:
+      - 'cmd.exe'
+      - 'powershell'
+  condition: selection
+level: high
+tags:
+  - attack.lateral-movement
+  - attack.t1021.002

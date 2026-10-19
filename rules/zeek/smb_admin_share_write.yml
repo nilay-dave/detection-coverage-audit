@@ -1,0 +1,18 @@
+title: Write To Administrative SMB Share
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0010
+status: stable
+description: Detects file writes to ADMIN$ or C$ shares across the network.
+logsource:
+  product: zeek
+  service: smb_files
+detection:
+  selection:
+    path|contains:
+      - 'ADMIN$'
+      - 'C$'
+    action: 'SMB::FILE_WRITE'
+  condition: selection
+level: high
+tags:
+  - attack.lateral-movement
+  - attack.t1021.002

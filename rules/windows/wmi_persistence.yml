@@ -1,0 +1,16 @@
+title: WMI Event Subscription Persistence
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0004
+status: experimental
+description: Detects creation of a WMI event consumer, a durable persistence mechanism.
+logsource:
+  product: windows
+  category: wmi_event
+detection:
+  selection:
+    Operation: 'Created'
+    ConsumerName|contains: '*'
+  condition: selection
+level: high
+tags:
+  - attack.persistence
+  - attack.t1546.003

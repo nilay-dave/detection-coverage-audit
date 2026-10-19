@@ -1,0 +1,18 @@
+title: Administrator Policy Attached To Principal
+id: 6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000b
+status: stable
+description: Detects attachment of an administrative managed policy to a user or role.
+logsource:
+  product: aws
+  service: cloudtrail
+detection:
+  selection:
+    eventName:
+      - 'AttachUserPolicy'
+      - 'AttachRolePolicy'
+    requestParameters.policyArn|contains: 'AdministratorAccess'
+  condition: selection
+level: high
+tags:
+  - attack.privilege-escalation
+  - attack.t1098.003
