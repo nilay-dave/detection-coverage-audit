@@ -13,25 +13,26 @@
       "events": 100000,
       "corpus_bytes": 2966363,
       "generate": {
-        "repeats": 1,
-        "min_s": 1.3213,
-        "median_s": 1.3213,
-        "max_s": 1.3213
+        "repeats": 0,
+        "min_s": null,
+        "median_s": null,
+        "max_s": null,
+        "reused": true
       },
       "profile": {
         "repeats": 3,
-        "min_s": 0.941,
-        "median_s": 0.9639,
-        "max_s": 0.965
+        "min_s": 1.0127,
+        "median_s": 1.0798,
+        "max_s": 1.1263
       },
       "audit": {
         "repeats": 3,
-        "min_s": 0.0156,
-        "median_s": 0.0164,
-        "max_s": 0.0174
+        "min_s": 0.0136,
+        "median_s": 0.0139,
+        "max_s": 0.0161
       },
-      "end_to_end_median_s": 0.9803,
-      "events_per_second": 102010,
+      "end_to_end_median_s": 1.0937,
+      "events_per_second": 91433,
       "distinct_fields_observed": 38,
       "sources_observed": 6,
       "rules_audited": 18,
@@ -51,25 +52,65 @@
       "events": 1000000,
       "corpus_bytes": 29666044,
       "generate": {
-        "repeats": 1,
-        "min_s": 12.4387,
-        "median_s": 12.4387,
-        "max_s": 12.4387
+        "repeats": 0,
+        "min_s": null,
+        "median_s": null,
+        "max_s": null,
+        "reused": true
       },
       "profile": {
         "repeats": 3,
-        "min_s": 9.2037,
-        "median_s": 9.3133,
-        "max_s": 9.5702
+        "min_s": 8.6688,
+        "median_s": 8.9617,
+        "max_s": 9.1827
       },
       "audit": {
         "repeats": 3,
-        "min_s": 0.0175,
-        "median_s": 0.0176,
-        "max_s": 0.0207
+        "min_s": 0.0161,
+        "median_s": 0.0167,
+        "max_s": 0.017
       },
-      "end_to_end_median_s": 9.3309,
-      "events_per_second": 107171,
+      "end_to_end_median_s": 8.9784,
+      "events_per_second": 111378,
+      "distinct_fields_observed": 38,
+      "sources_observed": 6,
+      "rules_audited": 18,
+      "techniques_mapped": 27,
+      "techniques_blind": 18,
+      "blind_technique_pct": 66.67,
+      "verdict_counts": {
+        "resolved": 5,
+        "rare_field": 0,
+        "missing_field": 8,
+        "no_source": 5,
+        "keyword_only": 0,
+        "unparseable": 1
+      }
+    },
+    {
+      "events": 10000000,
+      "corpus_bytes": 296628244,
+      "generate": {
+        "repeats": 0,
+        "min_s": null,
+        "median_s": null,
+        "max_s": null,
+        "reused": true
+      },
+      "profile": {
+        "repeats": 3,
+        "min_s": 94.5113,
+        "median_s": 94.6813,
+        "max_s": 95.5734
+      },
+      "audit": {
+        "repeats": 3,
+        "min_s": 0.0185,
+        "median_s": 0.0187,
+        "max_s": 0.0215
+      },
+      "end_to_end_median_s": 94.7,
+      "events_per_second": 105597,
       "distinct_fields_observed": 38,
       "sources_observed": 6,
       "rules_audited": 18,
