@@ -124,3 +124,82 @@ def test_blind_technique_pct_is_zero_when_no_techniques_mapped(rule_factory, cor
     result = audit(directory, profile, config)
     assert result.mapped_technique_count == 0
     assert result.blind_technique_pct == 0.0
+
+
+def test_defensive_or_rule_is_not_reported_blind(rule_factory, corpus_factory, config):
+    """The false positive this condition parsing exists to remove.
+
+    A rule written to match either Sysmon or EventID 4688 field names fires
+    correctly on an estate that collects one of them. Resolving the union of
+    every selection would call it blind because the other half is absent.
+    """
+    directory = rule_factory(_rule(
+        detection={
+            "selection_sysmon": {"Image|endswith": "\\powershell.exe"},
+            "selection_4688": {"NewProcessName|endswith": "\\powershell.exe"},
+            "condition": "selection_sysmon or selection_4688",
+        },
+        tags=["attack.t1059.001"]))
+    profile = corpus_factory([
+        ("windows/process_creation", {"EventID": 4688, "NewProcessName": "p"}),
+    ])
+    result = audit(directory, profile, config)
+    finding = result.findings[0]
+    assert finding.verdict is Verdict.RESOLVED
+    assert finding.branches_total == 2
+    assert finding.branches_blocked == 1
+    assert "1 of 2 condition branches are blocked" in finding.detail
+    assert result.techniques["T1059.001"].is_blind is False
+
+
+def test_rule_is_blind_only_when_every_branch_is_blocked(rule_factory, corpus_factory, config):
+    directory = rule_factory(_rule(
+        detection={
+            "selection_sysmon": {"Image": "x"},
+            "selection_other": {"ParentImage": "y"},
+            "condition": "selection_sysmon or selection_other",
+        },
+        tags=["attack.t1059.001"]))
+    profile = corpus_factory([("windows/process_creation", {"EventID": 4688, "NewProcessName": "p"})])
+    finding = audit(directory, profile, config).findings[0]
+    assert finding.verdict is Verdict.MISSING_FIELD
+    assert finding.branches_total == 2
+    assert finding.branches_blocked == 2
+    assert "all 2 condition branches are blocked" in finding.detail
+
+
+def test_negated_filter_fields_do_not_make_a_rule_blind(rule_factory, corpus_factory, config):
+    """A filter's fields need not be present for the rule to fire."""
+    directory = rule_factory(_rule(
+        detection={
+            "selection": {"EventID": 4688},
+            "filter": {"FieldThatWasNeverOnboarded": "x"},
+            "condition": "selection and not filter",
+        }))
+    profile = corpus_factory([("windows/process_creation", {"EventID": 4688})])
+    assert audit(directory, profile, config).findings[0].verdict is Verdict.RESOLVED
+
+
+def test_and_condition_still_requires_every_selection(rule_factory, corpus_factory, config):
+    directory = rule_factory(_rule(
+        detection={
+            "selection": {"EventID": 4688},
+            "paths": {"Image": "x"},
+            "condition": "selection and paths",
+        }))
+    profile = corpus_factory([("windows/process_creation", {"EventID": 4688})])
+    finding = audit(directory, profile, config).findings[0]
+    assert finding.verdict is Verdict.MISSING_FIELD
+    assert finding.missing_fields == ("Image",)
+
+
+def test_unparseable_condition_is_flagged_on_the_finding(rule_factory, corpus_factory, config):
+    directory = rule_factory(_rule(
+        detection={
+            "selection": {"Image": "x"},
+            "condition": "selection ^^ broken",
+        }))
+    profile = corpus_factory([("windows/process_creation", {"EventID": 4688})])
+    finding = audit(directory, profile, config).findings[0]
+    assert finding.condition_exact is False
+    assert "condition could not be parsed" in finding.detail

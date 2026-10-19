@@ -109,6 +109,12 @@
           <div class="tags">rare: {% for f, p in finding.rare_fields %}<code>{{ f }}</code> {{ "%.4f"|format(p) }} {% endfor %}</div>
           {% endif %}
           {% for warning in finding.shape_warnings %}<div class="tags">{{ warning }}</div>{% endfor %}
+          {% if finding.branches_total > 1 %}
+          <div class="tags">{{ finding.branches_total }} condition branches, {{ finding.branches_blocked }} blocked</div>
+          {% endif %}
+          {% if not finding.condition_exact %}
+          <div class="tags">condition not parsed, every selection treated as required</div>
+          {% endif %}
         </td>
         <td class="act">{{ finding.action }}</td>
       </tr>
