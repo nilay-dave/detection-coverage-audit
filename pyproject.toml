@@ -44,6 +44,12 @@ where = ["src"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
+# The repo root on sys.path so test modules can import shared helpers from
+# tests.conftest. Without it `pytest` resolves the tests directory itself as the
+# import root and `tests.conftest` is not importable, which made `make verify`
+# fail on a fresh clone while `pytest tests/` passed. Caught by the
+# clone-run-verify check, not by any test.
+pythonpath = ["."]
 
 [tool.ruff]
 # 120 rather than 88 or 100. Typer declares each CLI option on one line with its
