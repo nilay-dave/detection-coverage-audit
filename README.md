@@ -125,13 +125,21 @@ touches each rule once. Measured with `benchmark/run_benchmark.py`, median of 3
 runs per scenario, on 2 vCPU with 8GB RAM, Python 3.13 on Linux. Raw output is
 in `benchmark/results/benchmark.json`.
 
+Runtime scales linearly, which is the uninteresting half. The claim worth
+checking is that throughput does not degrade as the corpus grows, because that
+is what the batched profiler is for:
+
 ```mermaid
 xychart-beta
-  title "Profile time against corpus size, median of 3 runs"
-  x-axis "events (millions)" [0.1, 1, 10]
-  y-axis "seconds" 0 --> 100
-  line [1.08, 8.96, 94.68]
+  title "Throughput by corpus size, median of 3 runs, 2 vCPU"
+  x-axis "corpus size" ["100k events", "1M events", "10M events"]
+  y-axis "events per second" 0 --> 130000
+  bar [91433, 111378, 105597]
 ```
+
+A flat bar chart is the point: a profiler whose memory scaled with corpus size
+would show the third bar collapse, or produce no third bar at all, which is
+exactly what happened before ADR-004.
 
 | Events | Corpus size | Profile (median) | Audit (median) | End to end | Throughput |
 | --- | --- | --- | --- | --- | --- |
