@@ -13,3 +13,9 @@ htmlcov/
 site/
 data/generated/
 *.duckdb
+
+# Generated on every docs deploy by the workflow, so a committed copy would only
+# ever be a stale one. docs/metrics.json is deliberately NOT ignored: the number
+# check needs it in the tree.
+docs/report.html
+docs/audit.json
