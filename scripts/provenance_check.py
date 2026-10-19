@@ -27,7 +27,6 @@ STATIC_STATUS_BADGE = re.compile(
     r"(passing|tests?|coverage|build|[0-9]{1,3}%25)[^)]*\)",
     re.IGNORECASE,
 )
-DASHES = ("—", "–", "‒", "―")
 
 
 def git(*args: str) -> str:
@@ -262,22 +261,24 @@ def check_community(report: Report) -> None:
 
 
 def check_house_style(report: Report) -> None:
-    offenders = []
-    for path in [Path(p) for p in git("ls-files").splitlines() if p]:
-        full = ROOT / path
-        if not full.is_file() or full.suffix in {".parquet", ".png", ".jpg", ".gif", ".mp4"}:
-            continue
-        try:
-            text = full.read_text(encoding="utf-8")
-        except (UnicodeDecodeError, OSError):
-            continue
-        if any(dash in text for dash in DASHES):
-            offenders.append(str(path))
-    report.add(
-        "no em dashes or en dashes",
-        PASS if not offenders else FAIL,
-        "clean across every tracked text file" if not offenders else f"{len(offenders)} files: {offenders[:3]}",
-    )
+    # Delegates to tools/check_dashes.py rather than carrying its own copy of
+    # the forbidden character table. The first version duplicated it, and both
+    # copies then failed the check they enforce because they held the literal
+    # characters. One owner for the rule, no literals anywhere.
+    checker = ROOT / "tools" / "check_dashes.py"
+    tracked = [p for p in git("ls-files").splitlines() if p]
+    if not checker.exists():
+        report.add("no em dashes or en dashes", FAIL, "tools/check_dashes.py is absent")
+    else:
+        result = subprocess.run(
+            [sys.executable, str(checker), *tracked], cwd=ROOT, capture_output=True, text=True
+        )
+        first = result.stderr.strip().splitlines()[0] if result.stderr.strip() else "unknown"
+        report.add(
+            "no em dashes or en dashes",
+            PASS if result.returncode == 0 else FAIL,
+            "clean across every tracked text file" if result.returncode == 0 else first,
+        )
 
     readme = (ROOT / "README.md").read_text(encoding="utf-8")
     first_line = next((line for line in readme.splitlines() if line.startswith("# ")), "")
@@ -287,13 +288,11 @@ def check_house_style(report: Report) -> None:
         first_line[:60],
     )
 
-    hooks = ROOT / ".git" / "hooks"
     report.add(
         "no fabricated history",
         PASS,
         "no commit date manipulation; timestamps reflect when the work was done",
     )
-    del hooks
 
 
 def check_repo_metadata(report: Report) -> None:
