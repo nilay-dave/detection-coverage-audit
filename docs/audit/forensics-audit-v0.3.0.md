@@ -84,7 +84,14 @@ whether the field that rule keys on is in the telemetry you actually collect, an
 the gap between those two is where real intrusions go unnoticed. This tool joins
 Sigma rules to the field names measured in a telemetry export and reports which
 ATT&CK techniques are green on the heatmap and blind in production, with a CI
-gate so coverage regressions fail a pull request. On the bundled example, 66.7
-percent of mapped techniques turn out to have no rule that could fire, mostly
-because public detection content is written for Sysmon field names and the estate
-collects Windows Security EventID 4688.
+gate so coverage regressions fail a pull request. On the bundled example,
+<!--number:audit.blind_technique_pct-->63<!--/number--> percent of mapped
+techniques turn out to have no rule that could fire, mostly because public
+detection content is written for Sysmon field names and the estate collects
+Windows Security EventID 4688.
+
+Note on the figure: this audit was run at v0.3.0, when the number was 66.7
+percent. Condition aware resolution, merged after the audit, corrected one rule
+whose only missing field sat inside a filter clause, and the figure is now the
+value shown above. The pitch carries the tagged current number rather than the
+figure as it stood on the day.

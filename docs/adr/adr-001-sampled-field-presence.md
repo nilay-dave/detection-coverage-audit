@@ -13,9 +13,9 @@ parser is not a field that arrives populated, and the gap between the two is
 exactly what this tool exists to find.
 
 Replay the whole corpus. This is correct and expensive. Profiling measures
-107,300 events per second on the hardware recorded in benchmark/results, so a
+<!--number:performance.scenarios[2].events_per_second-->105,587<!--/number--> events per second on the hardware recorded in benchmark/results, so a
 90 day window at 2,000 events per second, which is a small enterprise, is
-15.5 billion events and roughly 40 hours of profiling. Nobody runs that weekly.
+15.5 billion events and roughly 41 hours of profiling. Nobody runs that weekly.
 
 Sample the corpus. This is correct within a stated confidence bound and cheap.
 
