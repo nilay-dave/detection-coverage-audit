@@ -108,3 +108,12 @@ def test_sample_flag_limits_profiled_events(tmp_path):
     result = runner.invoke(app, ["audit", "--rules", str(_rules(tmp_path, _RESOLVED)),
                                  "--telemetry", str(corpus), "--sample", "50"])
     assert result.exit_code == 0
+
+
+def test_version_matches_package_metadata():
+    """Regression: the version was declared in both pyproject.toml and
+    __init__.py, and the two drifted apart at the v0.3.0 tag."""
+    from importlib.metadata import version
+
+    assert __version__ == version("detection-coverage-audit")
+    assert __version__ != "0.0.0+unknown"

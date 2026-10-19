@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "detection-coverage-audit"
-version = "0.1.0"
+version = "0.3.0"
 description = "Finds ATT&CK techniques covered on paper but blind in production by joining detection rules to observed telemetry fields."
 readme = "README.md"
 requires-python = ">=3.11"
