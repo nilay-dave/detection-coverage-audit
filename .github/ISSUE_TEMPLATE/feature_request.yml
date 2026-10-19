@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a capability this tool should have.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to find out that the audit cannot currently tell you.
+    validations:
+      required: true
+
+  - type: textarea
+    id: decision
+    attributes:
+      label: What an engineer would do differently
+      description: |
+        If this is a new verdict or a new report field, say what action it would
+        change. A finding nobody acts on differently belongs in a detail field,
+        not a new category.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

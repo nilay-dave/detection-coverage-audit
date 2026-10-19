@@ -1,0 +1,36 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.6.9
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+        args: [--check]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: [--allow-multiple-documents]
+      - id: check-added-large-files
+        args: [--maxkb=512]
+      - id: check-merge-conflict
+      - id: mixed-line-ending
+        args: [--fix=lf]
+
+  - repo: local
+    hooks:
+      - id: no-dashes
+        name: no em dashes or en dashes
+        entry: python tools/check_dashes.py
+        language: system
+        types: [text]
+
+      - id: schema-shares
+        name: telemetry source shares sum to one
+        entry: python -c "import sys; sys.path.insert(0,'src'); from dca.telemetry.schemas import load_spec; load_spec()"
+        language: system
+        pass_filenames: false
+        files: ^src/dca/telemetry/schemas\.yml$

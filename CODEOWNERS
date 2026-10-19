@@ -1,0 +1,7 @@
+# Default owner for everything in this repository.
+*       @__GITHUB_USERNAME__
+
+# Detection content and the telemetry schema are the two places where a wrong
+# change produces a confidently wrong audit rather than an error.
+/rules/                         @__GITHUB_USERNAME__
+/src/dca/telemetry/schemas.yml  @__GITHUB_USERNAME__
