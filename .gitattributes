@@ -1,0 +1,7 @@
+# Keep the GitHub language bar honest. Detection content is YAML, not Python.
+*.yml   linguist-detectable=true
+*.yaml  linguist-detectable=true
+*.json  linguist-detectable=true
+*.sql   linguist-detectable=true
+*.html  linguist-detectable=true linguist-documentation=false
+docs/**  linguist-documentation=true
