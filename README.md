@@ -1,6 +1,6 @@
 # detection-coverage-audit
 
-**Finds the ATT&CK techniques your rules claim to cover and your telemetry cannot see. On the bundled example, <!--number:audit.blind_technique_pct-->66.7<!--/number--> percent of mapped techniques have no rule that could fire.**
+**Finds the ATT&CK techniques your rules claim to cover and your telemetry cannot see. On the bundled example, <!--number:audit.blind_technique_pct-->63<!--/number--> percent of mapped techniques have no rule that could fire.**
 
 [![ci](https://github.com/__GITHUB_USERNAME__/detection-coverage-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/__GITHUB_USERNAME__/detection-coverage-audit/actions/workflows/ci.yml)
 [![coverage](https://img.shields.io/endpoint?url=https://__GITHUB_USERNAME__.github.io/detection-coverage-audit/badges/coverage.json)](https://github.com/__GITHUB_USERNAME__/detection-coverage-audit/actions/workflows/coverage-badge.yml)
@@ -10,8 +10,8 @@
 
 ## What this solves
 
-- **A coverage heatmap counts rules, not capability.** This joins each rule to the fields actually present in sampled telemetry, and reports the techniques where nothing could fire. On the bundled rule pack that is <!--number:audit.techniques_blind-->18<!--/number--> of <!--number:audit.techniques_mapped-->27<!--/number--> mapped techniques.
-- **Sysmon content on a 4688 estate is the usual culprit.** Rules keyed on `Image` and `ParentImage` cannot match Windows Security EventID 4688, which populates `NewProcessName` and `ParentProcessName`. That single mismatch produces <!--number:audit.verdict_counts.missing_field-->8<!--/number--> of the <!--number:audit.rules_audited-->18<!--/number--> findings here.
+- **A coverage heatmap counts rules, not capability.** This joins each rule to the fields actually present in sampled telemetry, and reports the techniques where nothing could fire. On the bundled rule pack that is <!--number:audit.techniques_blind-->17<!--/number--> of <!--number:audit.techniques_mapped-->27<!--/number--> mapped techniques.
+- **Sysmon content on a 4688 estate is the usual culprit.** Rules keyed on `Image` and `ParentImage` cannot match Windows Security EventID 4688, which populates `NewProcessName` and `ParentProcessName`. That single mismatch produces <!--number:audit.verdict_counts.missing_field-->7<!--/number--> of the <!--number:audit.rules_audited-->18<!--/number--> findings here.
 - **It runs as a CI gate, not a report nobody opens.** `dca gate` exits non zero above a blind percentage you set, so coverage regressions fail a pull request on the detection content repo.
 
 ## The problem
@@ -35,7 +35,7 @@ two, and reports per rule whether the rule could fire at all. Then it rolls that
 up to technique level, applying the same standard a heatmap applies: a technique
 is covered when at least one rule mapped to it can fire.
 
-On the bundled rule pack of <!--number:audit.rules_audited-->18<!--/number--> rules against a <!--number:audit.corpus_events-->1,000,000<!--/number--> event synthetic corpus spanning <!--number:audit.log_sources_observed-->6<!--/number--> log sources and <!--number:audit.distinct_fields_observed-->38<!--/number--> distinct fields, <!--number:audit.blind_technique_pct-->66.7<!--/number--> percent of mapped techniques are blind. That corpus is generated, so that figure is a simulation, and it is a simulation calibrated to a real failure mode rather than an invented one: the rules are ordinary public style Sigma content and the Windows schema is EventID 4688 as Microsoft documents it.
+On the bundled rule pack of <!--number:audit.rules_audited-->18<!--/number--> rules against a <!--number:audit.corpus_events-->1,000,000<!--/number--> event synthetic corpus spanning <!--number:audit.log_sources_observed-->6<!--/number--> log sources and <!--number:audit.distinct_fields_observed-->38<!--/number--> distinct fields, <!--number:audit.blind_technique_pct-->63<!--/number--> percent of mapped techniques are blind. That corpus is generated, so that figure is a simulation, and it is a simulation calibrated to a real failure mode rather than an invented one: the rules are ordinary public style Sigma content and the Windows schema is EventID 4688 as Microsoft documents it.
 
 ## Architecture
 
@@ -78,7 +78,7 @@ corpus larger than memory does not abort the run.
 | Typer | CLI with three verbs | Typed arguments and subcommands with a small dependency surface |
 | Jinja2 | HTML report | The report is an artifact a lead reads in a review, not terminal output |
 | pandas | Chunked corpus generation | Chunked DataFrame insert measured 22 times faster end to end than `executemany`. See ADR-003 |
-| pytest, pytest-cov | <!--number:quality.test_count-->99<!--/number--> tests, <!--number:quality.test_coverage_pct-->99.2<!--/number--> percent branch coverage | Runs with no network, no API keys and no containers |
+| pytest, pytest-cov | <!--number:quality.test_count-->148<!--/number--> tests, <!--number:quality.test_coverage_pct-->98.9<!--/number--> percent branch coverage | Runs with no network, no API keys and no containers |
 
 ## Quickstart
 
@@ -134,7 +134,7 @@ xychart-beta
   title "Throughput by corpus size, median of 3 runs, 2 vCPU"
   x-axis "corpus size" ["100k events", "1M events", "10M events"]
   y-axis "events per second" 0 --> 130000
-  bar [91433, 111378, 105597]
+  bar [91299, 111186, 105587]
 ```
 
 A flat bar chart is the point: a profiler whose memory scaled with corpus size
@@ -143,9 +143,9 @@ exactly what happened before ADR-004.
 
 | Events | Corpus size | Profile (median) | Audit (median) | End to end | Throughput |
 | --- | --- | --- | --- | --- | --- |
-| <!--number:performance.scenarios[0].events-->100,000<!--/number--> | <!--number:performance.scenarios[0].corpus_mb-->3.0<!--/number--> MB | <!--number:performance.scenarios[0].profile_median_s-->1.08<!--/number--> s | <!--number:performance.scenarios[0].audit_median_s-->0.014<!--/number--> s | <!--number:performance.scenarios[0].end_to_end_median_s-->1.094<!--/number--> s | <!--number:performance.scenarios[0].events_per_second-->91,433<!--/number--> events/s |
-| <!--number:performance.scenarios[1].events-->1,000,000<!--/number--> | <!--number:performance.scenarios[1].corpus_mb-->29.7<!--/number--> MB | <!--number:performance.scenarios[1].profile_median_s-->8.962<!--/number--> s | <!--number:performance.scenarios[1].audit_median_s-->0.017<!--/number--> s | <!--number:performance.scenarios[1].end_to_end_median_s-->8.978<!--/number--> s | <!--number:performance.scenarios[1].events_per_second-->111,378<!--/number--> events/s |
-| <!--number:performance.scenarios[2].events-->10,000,000<!--/number--> | <!--number:performance.scenarios[2].corpus_mb-->296.6<!--/number--> MB | <!--number:performance.scenarios[2].profile_median_s-->94.681<!--/number--> s | <!--number:performance.scenarios[2].audit_median_s-->0.019<!--/number--> s | <!--number:performance.scenarios[2].end_to_end_median_s-->94.7<!--/number--> s | <!--number:performance.scenarios[2].events_per_second-->105,597<!--/number--> events/s |
+| <!--number:performance.scenarios[0].events-->100,000<!--/number--> | <!--number:performance.scenarios[0].corpus_mb-->3.0<!--/number--> MB | <!--number:performance.scenarios[0].profile_median_s-->1.07<!--/number--> s | <!--number:performance.scenarios[0].audit_median_s-->0.022<!--/number--> s | <!--number:performance.scenarios[0].end_to_end_median_s-->1.10<!--/number--> s | <!--number:performance.scenarios[0].events_per_second-->91,299<!--/number--> events/s |
+| <!--number:performance.scenarios[1].events-->1,000,000<!--/number--> | <!--number:performance.scenarios[1].corpus_mb-->29.7<!--/number--> MB | <!--number:performance.scenarios[1].profile_median_s-->8.98<!--/number--> s | <!--number:performance.scenarios[1].audit_median_s-->0.016<!--/number--> s | <!--number:performance.scenarios[1].end_to_end_median_s-->8.99<!--/number--> s | <!--number:performance.scenarios[1].events_per_second-->111,186<!--/number--> events/s |
+| <!--number:performance.scenarios[2].events-->10,000,000<!--/number--> | <!--number:performance.scenarios[2].corpus_mb-->296.6<!--/number--> MB | <!--number:performance.scenarios[2].profile_median_s-->94.7<!--/number--> s | <!--number:performance.scenarios[2].audit_median_s-->0.016<!--/number--> s | <!--number:performance.scenarios[2].end_to_end_median_s-->94.7<!--/number--> s | <!--number:performance.scenarios[2].events_per_second-->105,587<!--/number--> events/s |
 
 Throughput is flat at roughly 105,000 events per second across two orders of
 magnitude, which is the point of the batched profiler: runtime is linear and
