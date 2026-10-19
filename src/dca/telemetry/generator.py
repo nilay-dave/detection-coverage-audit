@@ -9,6 +9,14 @@ schemas.yml rather than to an accident of generation.
 
 Every number this project publishes that derives from this corpus is labelled
 as a simulation.
+
+Known limitation, stated because it would otherwise look like a bug: field
+values within one event are drawn independently, so an event can carry a
+semantically impossible combination such as eventSource iam.amazonaws.com with
+eventName DescribeInstances. The audit joins on field presence and never reads
+a field value, so independence does not affect any published result. Any future
+feature that reads values will need a correlated generator, which is recorded in
+the roadmap.
 """
 
 from __future__ import annotations
@@ -20,6 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import duckdb
+import pandas as pd
 
 from dca.logging import get_logger
 from dca.telemetry.schemas import FieldSpec, SourceSpec, TelemetrySpec, load_spec
@@ -133,6 +142,12 @@ def generate(
     con = duckdb.connect()
     con.execute("CREATE TABLE events (logsource_key VARCHAR, event JSON)")
 
+    # Rows are inserted a chunk at a time through a registered DataFrame rather
+    # than with executemany. See ADR-003: executemany binds one row per round
+    # trip and measured 2403 events per second, which put a 10M event corpus at
+    # 69 minutes. Chunked DataFrame registration measured 308 times faster on
+    # the insert path alone. Chunking is retained so peak memory stays bounded
+    # by CHUNK_ROWS rather than by corpus size.
     written = 0
     while written < events:
         size = min(CHUNK_ROWS, events - written)
@@ -141,7 +156,10 @@ def generate(
         for source in chosen:
             counts[source.key] += 1
             rows.append((source.key, _build_event(source, rng)))
-        con.executemany("INSERT INTO events VALUES (?, ?)", rows)
+        chunk = pd.DataFrame(rows, columns=["logsource_key", "event"])
+        con.register("chunk", chunk)
+        con.execute("INSERT INTO events SELECT logsource_key, event::JSON FROM chunk")
+        con.unregister("chunk")
         written += size
 
     con.execute(f"COPY events TO '{out_path.as_posix()}' (FORMAT PARQUET, COMPRESSION ZSTD)")
