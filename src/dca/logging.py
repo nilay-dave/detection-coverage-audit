@@ -43,12 +43,34 @@ class JsonFormatter(logging.Formatter):
         return json.dumps(payload, default=str)
 
 
+class LazyStderrHandler(logging.StreamHandler):
+    """A StreamHandler that resolves sys.stderr at emit time, not at construction.
+
+    logging.StreamHandler(sys.stderr) captures the stream object once. Anything
+    that replaces sys.stderr afterwards, a test harness capturing output or a
+    CLI runner, leaves the handler holding a closed file, and every subsequent
+    log call prints a logging error traceback instead of a log line.
+    """
+
+    def __init__(self) -> None:
+        super().__init__(stream=sys.stderr)
+
+    @property
+    def stream(self):  # type: ignore[override]
+        return sys.stderr
+
+    @stream.setter
+    def stream(self, _value) -> None:
+        # The base class assigns in __init__; the live lookup is authoritative.
+        return
+
+
 def configure(level: str | int = "INFO") -> None:
     """Install the JSON formatter on the root logger, once."""
     root = logging.getLogger()
     if any(isinstance(h.formatter, JsonFormatter) for h in root.handlers):
         return
-    handler = logging.StreamHandler(sys.stderr)
+    handler = LazyStderrHandler()
     handler.setFormatter(JsonFormatter())
     root.handlers = [handler]
     root.setLevel(level)
