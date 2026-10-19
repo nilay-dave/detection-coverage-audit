@@ -64,11 +64,12 @@ class CorpusProfile:
 
 # Flattens a JSON event into dotted leaf paths. json_tree gives one row per node;
 # a node with no children and a non-null key path is a leaf the rule can match.
+# Profiles the `sampled` view, which is materialized once by profile_corpus so
+# that the field counts and the per source counts describe the same rows. Two
+# independent USING SAMPLE clauses would draw two different samples.
 _PROFILE_SQL = """
 WITH src AS (
-    SELECT row_number() OVER () AS rid, logsource_key, event
-    FROM read_parquet(?)
-    {sample_clause}
+    SELECT row_number() OVER () AS rid, logsource_key, event FROM sampled
 ),
 counts AS (
     SELECT logsource_key, count(*) AS events_in_source FROM src GROUP BY 1
@@ -118,16 +119,25 @@ def profile_corpus(parquet_path: Path | str, config: Config) -> CorpusProfile:
         con.close()
         raise ValueError(f"telemetry corpus is empty: {parquet_path}")
 
-    sample_clause = ""
+    # Materialize the sample once. Reservoir sampling with an explicit seed keeps
+    # a sampled run reproducible, and materializing keeps every downstream query
+    # describing the same rows.
     if config.sample_rows and config.sample_rows < total:
-        # Reservoir sample so the profile is reproducible for a given seed.
-        sample_clause = f"USING SAMPLE {config.sample_rows} ROWS (reservoir, {config.seed})"
+        con.execute(
+            "CREATE TEMP TABLE sampled AS "
+            "SELECT logsource_key, event FROM read_parquet(?) "
+            f"USING SAMPLE {config.sample_rows} ROWS (reservoir, {config.seed})",
+            [path_str],
+        )
+    else:
+        con.execute(
+            "CREATE TEMP TABLE sampled AS SELECT logsource_key, event FROM read_parquet(?)",
+            [path_str],
+        )
 
-    sql = _PROFILE_SQL.format(sample_clause=sample_clause)
-    rows = con.execute(sql, [path_str]).fetchall()
-
+    rows = con.execute(_PROFILE_SQL).fetchall()
     source_rows = con.execute(
-        f"SELECT logsource_key, count(*) FROM read_parquet(?) {sample_clause} GROUP BY 1", [path_str]
+        "SELECT logsource_key, count(*) FROM sampled GROUP BY 1"
     ).fetchall()
     con.close()
 
