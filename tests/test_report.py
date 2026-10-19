@@ -57,3 +57,62 @@ def test_html_escapes_rule_titles(tmp_path, rule_factory, corpus_factory, config
     html = path.read_text(encoding="utf-8")
     assert "<script>alert(1)</script>" not in html
     assert "&lt;script&gt;" in html
+
+
+def test_report_has_a_skip_link_and_a_table_caption(tmp_path, rule_factory, corpus_factory, config):
+    html = render_html(_result(rule_factory, corpus_factory, config), tmp_path / "r.html").read_text(
+        encoding="utf-8"
+    )
+    assert 'class="skip" href="#findings"' in html
+    assert 'id="findings"' in html
+    assert "<caption>" in html
+
+
+def test_verdict_severity_is_not_carried_by_colour_alone(tmp_path, rule_factory, corpus_factory, config):
+    """A reader who cannot distinguish the verdict colours must still be able to
+    tell a blind rule from a resolved one."""
+    html = render_html(_result(rule_factory, corpus_factory, config), tmp_path / "r.html").read_text(
+        encoding="utf-8"
+    )
+    assert ".v-missing_field::before" in html
+    assert 'content: "x"' in html
+    assert 'content: "ok"' in html
+    # The word itself is in the cell, not only the colour class.
+    assert "missing field" in html
+
+
+def test_headline_figure_has_a_text_label(tmp_path, rule_factory, corpus_factory, config):
+    html = render_html(_result(rule_factory, corpus_factory, config), tmp_path / "r.html").read_text(
+        encoding="utf-8"
+    )
+    assert "percent of mapped techniques are blind" in html
+
+
+def test_lists_are_marked_up_as_lists(tmp_path, rule_factory, corpus_factory, config):
+    html = render_html(_result(rule_factory, corpus_factory, config), tmp_path / "r.html").read_text(
+        encoding="utf-8"
+    )
+    assert 'role="list"' in html
+    assert "<ul class=\"chips\"" in html
+    assert "<li class=\"chip\">" in html
+
+
+def test_reduced_motion_is_respected(tmp_path, rule_factory, corpus_factory, config):
+    html = render_html(_result(rule_factory, corpus_factory, config), tmp_path / "r.html").read_text(
+        encoding="utf-8"
+    )
+    assert "prefers-reduced-motion: reduce" in html
+
+
+def test_every_colour_pair_meets_its_contrast_threshold():
+    """Runs the same check CI runs, so a palette edit cannot quietly fail AA."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, str(root / "tools" / "check_contrast.py")],
+        cwd=root, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

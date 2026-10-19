@@ -6,8 +6,10 @@
 <title>Detection coverage audit</title>
 <style>
   :root {
-    --bg: #ffffff; --fg: #141617; --muted: #5b6366; --line: #e3e6e8;
-    --panel: #f7f8f9; --blind: #a3251c; --warn: #8a5a00; --ok: #1d6b45;
+    /* Contrast measured against the backgrounds they sit on, WCAG AA or better.
+       --muted was #5b6366 at 4.36:1 on --panel, which fails AA for body text. */
+    --bg: #ffffff; --fg: #141617; --muted: #4a5154; --line: #d8dcde;
+    --panel: #f5f6f7; --blind: #96201a; --warn: #6f4800; --ok: #17593a;
   }
   @media (prefers-color-scheme: dark) {
     :root {
@@ -45,14 +47,31 @@
   .v-resolved { color: var(--ok); }
   .tags { color: var(--muted); font-size: 12px; }
   .act { color: var(--muted); font-size: 12.5px; }
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none;
+    padding: 0; margin: 0; }
   .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
     font: 12.5px ui-monospace, monospace; }
   footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line);
     color: var(--muted); font-size: 12.5px; }
+  caption { text-align: left; font-size: 12.5px; color: var(--muted);
+    padding-bottom: 10px; }
+  .skip { position: absolute; left: -9999px; top: 0; background: var(--bg);
+    color: var(--fg); padding: 10px 14px; border: 1px solid var(--line);
+    border-radius: 6px; z-index: 10; }
+  .skip:focus { left: 8px; top: 8px; }
+  a:focus-visible, .skip:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  /* A glyph before each verdict so severity is not carried by colour alone. */
+  .v::before { font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .v-no_source::before, .v-missing_field::before, .v-unparseable::before { content: "x"; }
+  .v-rare_field::before, .v-keyword_only::before { content: "!"; }
+  .v-resolved::before { content: "ok"; font-size: 10px; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
 </style>
 </head>
 <body>
+<a class="skip" href="#findings">Skip to findings</a>
 <div class="wrap">
   <h1>Detection coverage audit</h1>
   <p class="sub">
@@ -61,7 +80,10 @@
   </p>
 
   <div class="headline">
-    <div class="big">{{ summary.blind_technique_pct }}<small>%</small></div>
+    <div class="big" role="img"
+         aria-label="{{ summary.blind_technique_pct }} percent of mapped techniques are blind">
+      {{ summary.blind_technique_pct }}<small>%</small>
+    </div>
     <p>
       of the {{ summary.techniques_mapped }} ATT&amp;CK techniques these rules claim to cover have
       no rule that could fire on the observed telemetry. That is
@@ -70,24 +92,28 @@
     </p>
   </div>
 
-  <div class="grid">
-    <div class="tile"><div class="n">{{ summary.verdict_counts.resolved }}</div><div class="l">Resolved</div></div>
-    <div class="tile"><div class="n">{{ summary.verdict_counts.missing_field }}</div><div class="l">Missing field</div></div>
-    <div class="tile"><div class="n">{{ summary.verdict_counts.no_source }}</div><div class="l">No source</div></div>
-    <div class="tile"><div class="n">{{ summary.verdict_counts.rare_field }}</div><div class="l">Rare field</div></div>
-    <div class="tile"><div class="n">{{ summary.verdict_counts.keyword_only }}</div><div class="l">Keyword only</div></div>
-    <div class="tile"><div class="n">{{ summary.verdict_counts.unparseable }}</div><div class="l">Unparseable</div></div>
+  <div class="grid" role="list" aria-label="Finding counts by verdict">
+    <div class="tile" role="listitem"><div class="n">{{ summary.verdict_counts.resolved }}</div><div class="l">Resolved</div></div>
+    <div class="tile" role="listitem"><div class="n">{{ summary.verdict_counts.missing_field }}</div><div class="l">Missing field</div></div>
+    <div class="tile" role="listitem"><div class="n">{{ summary.verdict_counts.no_source }}</div><div class="l">No source</div></div>
+    <div class="tile" role="listitem"><div class="n">{{ summary.verdict_counts.rare_field }}</div><div class="l">Rare field</div></div>
+    <div class="tile" role="listitem"><div class="n">{{ summary.verdict_counts.keyword_only }}</div><div class="l">Keyword only</div></div>
+    <div class="tile" role="listitem"><div class="n">{{ summary.verdict_counts.unparseable }}</div><div class="l">Unparseable</div></div>
   </div>
 
   {% if blind_techniques %}
   <h2>Blind techniques</h2>
-  <div class="chips">
-    {% for technique in blind_techniques %}<span class="chip">{{ technique }}</span>{% endfor %}
-  </div>
+  <ul class="chips" aria-label="Techniques with no rule that can fire">
+    {% for technique in blind_techniques %}<li class="chip">{{ technique }}</li>{% endfor %}
+  </ul>
   {% endif %}
 
-  <h2>Findings</h2>
+  <h2 id="findings">Findings</h2>
   <table>
+    <caption>
+      One row per rule, most severe first. The verdict column carries a glyph and
+      a word as well as a colour.
+    </caption>
     <thead>
       <tr><th>Verdict</th><th>Rule</th><th>Log source</th><th>Detail</th><th>Action</th></tr>
     </thead>

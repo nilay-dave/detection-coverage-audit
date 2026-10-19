@@ -37,6 +37,10 @@ jobs:
       - name: Test
         run: pytest --cov=dca --cov-report=term-missing --cov-report=xml --cov-fail-under=90
 
+      - name: Report colour contrast
+        if: matrix.python-version == '3.13'
+        run: python tools/check_contrast.py
+
       - name: Upload coverage xml
         if: matrix.python-version == '3.13'
         uses: actions/upload-artifact@v4
