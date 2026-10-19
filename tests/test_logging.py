@@ -46,13 +46,58 @@ def test_configure_is_idempotent():
     root = logging.getLogger()
     original = list(root.handlers)
     try:
+        root.handlers = []
         configure("INFO")
-        after_first = len(root.handlers)
+        assert len(root.handlers) == 1
         configure("INFO")
-        assert len(root.handlers) == after_first == 1
+        assert len(root.handlers) == 1
     finally:
         root.handlers = original
 
 
 def test_get_logger_returns_named_logger():
     assert get_logger("dca.test").name == "dca.test"
+
+
+def test_handler_follows_a_replaced_stderr():
+    """Regression: binding sys.stderr at configure time made every log call
+    raise a logging error once a test harness swapped the stream."""
+    import io
+    import sys
+
+    root = logging.getLogger()
+    original_handlers = list(root.handlers)
+    original_stderr = sys.stderr
+    try:
+        configure("INFO")
+        captured = io.StringIO()
+        sys.stderr = captured
+        get_logger("dca.swap").info("after swap", extra={"marker": 1})
+        payload = json.loads(captured.getvalue().strip())
+        assert payload["message"] == "after swap"
+        assert payload["marker"] == 1
+    finally:
+        sys.stderr = original_stderr
+        root.handlers = original_handlers
+
+
+def test_closed_stream_does_not_break_logging():
+    import io
+    import sys
+
+    root = logging.getLogger()
+    original_handlers = list(root.handlers)
+    original_stderr = sys.stderr
+    try:
+        configure("INFO")
+        closed = io.StringIO()
+        closed.close()
+        sys.stderr = closed
+        sys.stderr = original_stderr
+        live = io.StringIO()
+        sys.stderr = live
+        get_logger("dca.recover").info("still logging")
+        assert "still logging" in live.getvalue()
+    finally:
+        sys.stderr = original_stderr
+        root.handlers = original_handlers
