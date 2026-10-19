@@ -119,6 +119,9 @@ def profile_corpus(parquet_path: Path | str, config: Config) -> CorpusProfile:
 
     con = duckdb.connect()
     con.execute(f"SET threads = {config.duckdb_threads}")
+    # See the note in telemetry/generator.py: a library does not draw on the
+    # caller's terminal.
+    con.execute("SET enable_progress_bar = false")
 
     path_str = parquet_path.as_posix()
     total = con.execute("SELECT count(*) FROM read_parquet(?)", [path_str]).fetchone()[0]

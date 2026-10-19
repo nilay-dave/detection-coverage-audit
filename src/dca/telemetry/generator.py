@@ -148,6 +148,10 @@ def generate(
     counts: dict[str, int] = {s.key: 0 for s in sources}
 
     con = duckdb.connect()
+    # The progress bar writes carriage returns to stdout, which corrupts piped
+    # output and made a nohup'd benchmark run unreadable. This is a library, so
+    # it should not be drawing on the caller's terminal at all.
+    con.execute("SET enable_progress_bar = false")
     con.execute("CREATE TABLE events (logsource_key VARCHAR, event JSON)")
 
     # Rows are inserted a chunk at a time through a registered DataFrame rather
