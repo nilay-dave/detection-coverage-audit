@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detection coverage audit</title>
+<style>
+  :root {
+    --bg: #ffffff; --fg: #141617; --muted: #5b6366; --line: #e3e6e8;
+    --panel: #f7f8f9; --blind: #a3251c; --warn: #8a5a00; --ok: #1d6b45;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121415; --fg: #e8eaeb; --muted: #9aa2a5; --line: #2a2e30;
+      --panel: #1a1d1e; --blind: #ef6a5f; --warn: #d79b2b; --ok: #4fb183;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); margin: 40px 0 12px; font-weight: 600; }
+  .sub { color: var(--muted); margin: 0 0 28px; font-size: 13px; }
+  .headline { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px;
+    background: var(--panel); margin-bottom: 24px; }
+  .big { font-size: 46px; font-weight: 650; line-height: 1; color: var(--blind);
+    font-variant-numeric: tabular-nums; }
+  .big small { font-size: 20px; font-weight: 500; }
+  .headline p { margin: 10px 0 0; max-width: 66ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .tile .n { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tile .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px 10px 8px 0; font-weight: 600; }
+  td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+  .v { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .v-no_source, .v-missing_field, .v-unparseable { color: var(--blind); }
+  .v-rare_field, .v-keyword_only { color: var(--warn); }
+  .v-resolved { color: var(--ok); }
+  .tags { color: var(--muted); font-size: 12px; }
+  .act { color: var(--muted); font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+    font: 12.5px ui-monospace, monospace; }
+  footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 12.5px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Detection coverage audit</h1>
+  <p class="sub">
+    {{ summary.rules_total }} rules against {{ "{:,}".format(summary.corpus_events) }} events
+    across {{ summary.sources_observed | length }} observed log sources.
+  </p>
+
+  <div class="headline">
+    <div class="big">{{ summary.blind_technique_pct }}<small>%</small></div>
+    <p>
+      of the {{ summary.techniques_mapped }} ATT&amp;CK techniques these rules claim to cover have
+      no rule that could fire on the observed telemetry. That is
+      {{ summary.techniques_blind }} technique{{ "" if summary.techniques_blind == 1 else "s" }}
+      that a coverage heatmap would show as green.
+    </p>
+  </div>
+
+  <div class="grid">
+    <div class="tile"><div class="n">{{ summary.verdict_counts.resolved }}</div><div class="l">Resolved</div></div>
+    <div class="tile"><div class="n">{{ summary.verdict_counts.missing_field }}</div><div class="l">Missing field</div></div>
+    <div class="tile"><div class="n">{{ summary.verdict_counts.no_source }}</div><div class="l">No source</div></div>
+    <div class="tile"><div class="n">{{ summary.verdict_counts.rare_field }}</div><div class="l">Rare field</div></div>
+    <div class="tile"><div class="n">{{ summary.verdict_counts.keyword_only }}</div><div class="l">Keyword only</div></div>
+    <div class="tile"><div class="n">{{ summary.verdict_counts.unparseable }}</div><div class="l">Unparseable</div></div>
+  </div>
+
+  {% if blind_techniques %}
+  <h2>Blind techniques</h2>
+  <div class="chips">
+    {% for technique in blind_techniques %}<span class="chip">{{ technique }}</span>{% endfor %}
+  </div>
+  {% endif %}
+
+  <h2>Findings</h2>
+  <table>
+    <thead>
+      <tr><th>Verdict</th><th>Rule</th><th>Log source</th><th>Detail</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      {% for finding in findings %}
+      <tr>
+        <td class="v v-{{ finding.verdict }}">{{ finding.verdict | replace("_", " ") }}</td>
+        <td>
+          {{ finding.title }}
+          {% if finding.techniques %}<div class="tags">{{ finding.techniques | join(", ") }}</div>{% endif %}
+        </td>
+        <td><code>{{ finding.logsource_key }}</code></td>
+        <td>
+          {{ finding.detail }}
+          {% if finding.missing_fields %}
+          <div class="tags">absent: {% for f in finding.missing_fields %}<code>{{ f }}</code> {% endfor %}</div>
+          {% endif %}
+          {% if finding.rare_fields %}
+          <div class="tags">rare: {% for f, p in finding.rare_fields %}<code>{{ f }}</code> {{ "%.4f"|format(p) }} {% endfor %}</div>
+          {% endif %}
+          {% for warning in finding.shape_warnings %}<div class="tags">{{ warning }}</div>{% endfor %}
+        </td>
+        <td class="act">{{ finding.action }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <footer>
+    Observed log sources: {% for source in summary.sources_observed %}<code>{{ source }}</code> {% endfor %}
+    <br>
+    Numbers on this page are measured from the corpus named above. When that corpus is the bundled
+    synthetic one, every number is a simulation.
+  </footer>
+</div>
+</body>
+</html>
