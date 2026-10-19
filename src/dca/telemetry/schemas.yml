@@ -15,6 +15,13 @@
 # presence: 1.0 means the field is in every event. A fraction means the field is
 # only populated in that fraction of events, which is how optional and
 # conditionally populated fields behave in production.
+#
+# literal_key: true means the field name is ONE key that happens to contain
+# dots, not a path into a nested object. Zeek writes id.orig_h as a single key;
+# CloudTrail nests type under userIdentity. Both read as "id.orig_h" and
+# "userIdentity.type" in a Sigma rule, but they are different shapes on the
+# wire and need different field extractions in the SIEM, so the generator and
+# the profiler both have to keep them apart.
 
 sources:
   windows/process_creation:
@@ -68,8 +75,8 @@ sources:
     note: Stock Zeek dns.log. No enrichment or derived fields are applied in the pipeline.
     fields:
       ts: { presence: 1.0, kind: epoch }
-      "id.orig_h": { presence: 1.0, kind: ip }
-      "id.resp_h": { presence: 1.0, kind: ip }
+      "id.orig_h": { presence: 1.0, kind: ip, literal_key: true }
+      "id.resp_h": { presence: 1.0, kind: ip, literal_key: true }
       query: { presence: 0.97, kind: domain }
       qtype_name: { presence: 0.97, kind: choice, values: ["A", "AAAA", "TXT", "PTR", "CNAME", "SRV"] }
       rcode_name: { presence: 0.95, kind: choice, values: ["NOERROR", "NXDOMAIN", "SERVFAIL"] }
@@ -79,8 +86,8 @@ sources:
     note: Stock Zeek ssl.log. Certificate validation is logged, destination enrichment is not.
     fields:
       ts: { presence: 1.0, kind: epoch }
-      "id.orig_h": { presence: 1.0, kind: ip }
-      "id.resp_h": { presence: 1.0, kind: ip }
+      "id.orig_h": { presence: 1.0, kind: ip, literal_key: true }
+      "id.resp_h": { presence: 1.0, kind: ip, literal_key: true }
       server_name: { presence: 0.83, kind: domain }
       validation_status: { presence: 0.71, kind: choice, values: ["ok", "self signed certificate", "unable to get local issuer certificate"] }
       version: { presence: 1.0, kind: choice, values: ["TLSv12", "TLSv13"] }

@@ -98,8 +98,16 @@ def _value(spec: FieldSpec, rng: random.Random) -> object:
     raise ValueError(f"unknown field kind: {kind}")
 
 
-def _assign(event: dict, dotted: str, value: object) -> None:
-    """Write a dotted field name into the event as a nested object."""
+def _assign(event: dict, dotted: str, value: object, literal_key: bool = False) -> None:
+    """Write a field into the event.
+
+    When `literal_key` is set the name is written as one key even though it
+    contains dots, which is how Zeek emits id.orig_h. Otherwise dots are a path
+    and the value is nested, which is how CloudTrail emits userIdentity.type.
+    """
+    if literal_key:
+        event[dotted] = value
+        return
     parts = dotted.split(".")
     node = event
     for part in parts[:-1]:
@@ -116,7 +124,7 @@ def _build_event(source: SourceSpec, rng: random.Random) -> str:
     for field_spec in source.fields:
         if field_spec.presence < 1.0 and rng.random() > field_spec.presence:
             continue
-        _assign(event, field_spec.name, _value(field_spec, rng))
+        _assign(event, field_spec.name, _value(field_spec, rng), field_spec.literal_key)
     return json.dumps(event, separators=(",", ":"))
 
 

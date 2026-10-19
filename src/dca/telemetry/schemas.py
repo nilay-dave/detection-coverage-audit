@@ -21,6 +21,8 @@ class FieldSpec:
     kind: str
     values: list | None = None
     value: object | None = None
+    # True when this name is one key containing dots, not a nested path.
+    literal_key: bool = False
 
 
 @dataclass(frozen=True)
@@ -66,6 +68,7 @@ def load_spec(path: Path | str | None = None) -> TelemetrySpec:
                     kind=str(field_body.get("kind", "word")),
                     values=field_body.get("values"),
                     value=field_body.get("value"),
+                    literal_key=bool(field_body.get("literal_key", False)),
                 )
             )
         if not fields:
