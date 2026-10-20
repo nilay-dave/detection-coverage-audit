@@ -1,21 +1,36 @@
-.PHONY: install verify demo report bench clean
+# PYTHON is the interpreter everything runs through. The console scripts pip
+# installs (pytest, dca) bind to whichever interpreter installed them, which is
+# not necessarily the one on PATH: on a machine with several Pythons a bare
+# `pytest` can resolve to one that cannot import this project's dependencies.
+# Override with: make verify PYTHON=python3.12
+PYTHON ?= python3
+
+.PHONY: install verify test lint demo report bench clean
 
 install:
-	pip install -e ".[dev]"
+	$(PYTHON) -m pip install -e ".[dev]"
 
-verify:
-	ruff check src tests
-	pytest --cov=dca --cov-report=term-missing --cov-report=xml
+lint:
+	$(PYTHON) -m ruff check src tests tools benchmark scripts
+
+test:
+	$(PYTHON) -m pytest --cov=dca --cov-report=term-missing --cov-report=xml
+
+# Runs every check CI runs, in the same order, so a green local verify means a
+# green build. A verify that is a subset of CI is a verify that lies.
+verify: lint test
+	$(PYTHON) tools/check_dependencies.py
+	$(PYTHON) scripts/provenance_check.py
 
 demo:
-	dca generate-telemetry --events 100000 --out data/generated/telemetry.parquet --seed 7
-	dca audit --rules rules/ --telemetry data/generated/telemetry.parquet --out docs/report.html
+	$(PYTHON) -m dca.cli generate-telemetry --events 100000 --out data/generated/telemetry.parquet --seed 7
+	$(PYTHON) -m dca.cli audit --rules rules/ --telemetry data/generated/telemetry.parquet --out docs/report.html
 
 report:
-	python tools/collect_metrics.py
+	$(PYTHON) tools/collect_metrics.py
 
 bench:
-	python benchmark/run_benchmark.py
+	$(PYTHON) benchmark/run_benchmark.py
 
 clean:
 	rm -rf .pytest_cache .ruff_cache htmlcov coverage.xml .coverage data/generated

@@ -117,3 +117,20 @@ def test_version_matches_package_metadata():
 
     assert __version__ == version("detection-coverage-audit")
     assert __version__ != "0.0.0+unknown"
+
+
+def test_every_declared_dependency_is_used():
+    """An unused dependency is a claim the code does not support, and if it also
+    sits in the README tech stack it is an advertised capability the project
+    does not have. Backported from a sibling repository where this check caught
+    one, after pysigma had already been caught here by hand."""
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(
+        [sys.executable, str(root / "tools" / "check_dependencies.py")],
+        cwd=root, capture_output=True, text=True,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

@@ -10,9 +10,18 @@ make install
 make verify
 ```
 
-`make verify` runs ruff and the test suite with coverage. It needs no network,
-no API keys and no containers. If it does not pass on a clean checkout, that is
-a bug worth an issue on its own.
+`make verify` runs every check CI runs, in the same order: lint, tests with
+coverage, the dependency check and the provenance audit. A verify that is a
+subset of CI is a verify that lies, so if it passes locally the build should be
+green.
+
+It needs no network, no API keys and no containers. If it does not pass on a
+clean checkout, that is a bug worth an issue on its own.
+
+Everything runs through `$(PYTHON)`, which defaults to `python3`. The console
+scripts pip installs bind to whichever interpreter installed them, which on a
+machine with several Pythons is not necessarily the one on PATH. Override it if
+you need to: `make verify PYTHON=python3.12`.
 
 ## The rules that matter here
 
@@ -20,6 +29,12 @@ a bug worth an issue on its own.
 output, then commit. Do not chain `pytest && git commit`: if the suite fails for
 a reason you have not read yet, the commit lands anyway and the history stops
 being trustworthy.
+
+**No unused dependencies.** `tools/check_dependencies.py` fails CI on anything
+declared in `pyproject.toml` that nothing imports, with an explicit list for the
+genuinely indirect ones. An unused dependency is a claim the code does not
+support, and if it also appears in the README tech stack it is a capability the
+project advertises and does not have. That happened here with pysigma.
 
 **Every published number is measured.** Numbers in the README are tagged with
 `<!--number:path-->` markers and checked against `docs/metrics.json` by
