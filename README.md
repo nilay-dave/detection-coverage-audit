@@ -2,11 +2,7 @@
 
 **Finds the ATT&CK techniques your rules claim to cover and your telemetry cannot see. On the bundled example, <!--number:audit.blind_technique_pct-->63<!--/number--> percent of mapped techniques have no rule that could fire.**
 
-[![ci](https://github.com/__GITHUB_USERNAME__/detection-coverage-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/__GITHUB_USERNAME__/detection-coverage-audit/actions/workflows/ci.yml)
-[![coverage](https://img.shields.io/endpoint?url=https://__GITHUB_USERNAME__.github.io/detection-coverage-audit/badges/coverage.json)](https://github.com/__GITHUB_USERNAME__/detection-coverage-audit/actions/workflows/coverage-badge.yml)
-[![blind techniques](https://img.shields.io/endpoint?url=https://__GITHUB_USERNAME__.github.io/detection-coverage-audit/badges/blind.json)](docs/metrics.json)
-[![docs](https://img.shields.io/badge/docs-mkdocs%20material-blue)](https://__GITHUB_USERNAME__.github.io/detection-coverage-audit/)
-[![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 
 ## What this solves
 
