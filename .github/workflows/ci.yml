@@ -47,7 +47,7 @@ jobs:
 
       - name: Upload coverage xml
         if: matrix.python-version == '3.13'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-xml
           path: coverage.xml
@@ -92,7 +92,7 @@ jobs:
         run: |
           dca gate --rules rules --telemetry data/generated/ci.parquet \
             --max-blind-pct 70 --max-unparseable 1
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: |
