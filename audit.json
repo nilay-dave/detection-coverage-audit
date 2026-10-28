@@ -1,0 +1,421 @@
+{
+  "summary": {
+    "rules_total": 18,
+    "rules_unparseable": 1,
+    "corpus_events": 200000,
+    "corpus_sampled": 200000,
+    "sources_observed": [
+      "aws/cloudtrail",
+      "windows/process_creation",
+      "windows/registry_set",
+      "windows/system",
+      "zeek/dns",
+      "zeek/ssl"
+    ],
+    "techniques_mapped": 27,
+    "techniques_blind": 17,
+    "blind_technique_pct": 62.96,
+    "verdict_counts": {
+      "resolved": 6,
+      "rare_field": 0,
+      "missing_field": 7,
+      "no_source": 5,
+      "keyword_only": 0,
+      "unparseable": 1
+    }
+  },
+  "blind_techniques": [
+    "T1003",
+    "T1003.001",
+    "T1048",
+    "T1048.003",
+    "T1053",
+    "T1053.005",
+    "T1059",
+    "T1059.001",
+    "T1204",
+    "T1204.002",
+    "T1546",
+    "T1546.003",
+    "T1548",
+    "T1548.002",
+    "T1573",
+    "T1573.002",
+    "T1621"
+  ],
+  "findings": [
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0001",
+      "title": "Encoded PowerShell Command Line",
+      "path": "rules/windows/suspicious_powershell_encoded.yml",
+      "logsource_key": "windows/process_creation",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "Image"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "1 of 2 referenced fields never appear in windows/process_creation",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1059",
+        "T1059.001"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0005",
+      "title": "Scheduled Task Created By Non Admin Path",
+      "path": "rules/windows/scheduled_task_creation.yml",
+      "logsource_key": "windows/process_creation",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "Image"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "1 of 2 referenced fields never appear in windows/process_creation",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1053",
+        "T1053.005"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0006",
+      "title": "Office Application Spawning Script Interpreter",
+      "path": "rules/windows/parent_child_office_spawn.yml",
+      "logsource_key": "windows/process_creation",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "Image",
+        "ParentImage"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "2 of 2 referenced fields never appear in windows/process_creation",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1204",
+        "T1204.002"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0007",
+      "title": "Defender Exclusion Added Via Registry",
+      "path": "rules/windows/defender_tamper.yml",
+      "logsource_key": "windows/registry_set",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "Details",
+        "TargetObject"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "2 of 2 referenced fields never appear in windows/registry_set",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1562",
+        "T1562.001"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0008",
+      "title": "Elevated Process From Medium Integrity Parent",
+      "path": "rules/windows/suspicious_parent_integrity.yml",
+      "logsource_key": "windows/process_creation",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "IntegrityLevel",
+        "ParentIntegrityLevel"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "2 of 2 referenced fields never appear in windows/process_creation",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1548",
+        "T1548.002"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000e",
+      "title": "Possible DNS Tunneling Via Long Labels",
+      "path": "rules/zeek/dns_tunneling_long_label.yml",
+      "logsource_key": "zeek/dns",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "query_length"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "1 of 2 referenced fields never appear in zeek/dns",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1048",
+        "T1048.003"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000f",
+      "title": "Self Signed TLS Certificate To Rare Destination",
+      "path": "rules/zeek/self_signed_tls_to_rare_asn.yml",
+      "logsource_key": "zeek/ssl",
+      "verdict": "missing_field",
+      "missing_fields": [
+        "dest_asn_rarity"
+      ],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "1 of 2 referenced fields never appear in zeek/ssl",
+      "branches_total": 1,
+      "branches_blocked": 1,
+      "condition_exact": true,
+      "techniques": [
+        "T1573",
+        "T1573.002"
+      ],
+      "action": "Rewrite the rule against the field names this source emits, or extend the pipeline."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0002",
+      "title": "LSASS Process Memory Access",
+      "path": "rules/windows/lsass_memory_access.yml",
+      "logsource_key": "windows/process_access",
+      "verdict": "no_source",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "log source windows/process_access produced no events in the corpus",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1003",
+        "T1003.001"
+      ],
+      "action": "Onboard the log source, or retire the rule."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0004",
+      "title": "WMI Event Subscription Persistence",
+      "path": "rules/windows/wmi_persistence.yml",
+      "logsource_key": "windows/wmi_event",
+      "verdict": "no_source",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "log source windows/wmi_event produced no events in the corpus",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1546",
+        "T1546.003"
+      ],
+      "action": "Onboard the log source, or retire the rule."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0010",
+      "title": "Write To Administrative SMB Share",
+      "path": "rules/zeek/smb_admin_share_write.yml",
+      "logsource_key": "zeek/smb_files",
+      "verdict": "no_source",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "log source zeek/smb_files produced no events in the corpus",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1021",
+        "T1021.002"
+      ],
+      "action": "Onboard the log source, or retire the rule."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0011",
+      "title": "Repeated MFA Push Denials",
+      "path": "rules/okta/mfa_fatigue.yml",
+      "logsource_key": "okta/system",
+      "verdict": "no_source",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "log source okta/system produced no events in the corpus",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1621"
+      ],
+      "action": "Onboard the log source, or retire the rule."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0012",
+      "title": "Okta Suspicious Activity Reported",
+      "path": "rules/okta/impossible_travel_keyword.yml",
+      "logsource_key": "okta/system",
+      "verdict": "no_source",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "log source okta/system produced no events in the corpus",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1078"
+      ],
+      "action": "Onboard the log source, or retire the rule."
+    },
+    {
+      "rule_id": "broken_rule_no_detection",
+      "title": "broken_rule_no_detection.yml",
+      "path": "rules/windows/broken_rule_no_detection.yml",
+      "logsource_key": "unknown",
+      "verdict": "unparseable",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "rule has no detection block",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [],
+      "action": "Fix or delete the rule file."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0003",
+      "title": "Remote Service Creation",
+      "path": "rules/windows/service_creation_remote.yml",
+      "logsource_key": "windows/system",
+      "verdict": "resolved",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "every referenced field is present above the threshold",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1021",
+        "T1021.002"
+      ],
+      "action": "No action."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e0009",
+      "title": "AWS Root Account Console Login",
+      "path": "rules/cloudtrail/root_account_usage.yml",
+      "logsource_key": "aws/cloudtrail",
+      "verdict": "resolved",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "every referenced field is present above the threshold",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1078",
+        "T1078.004"
+      ],
+      "action": "No action."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000a",
+      "title": "CloudTrail Logging Stopped",
+      "path": "rules/cloudtrail/cloudtrail_logging_disabled.yml",
+      "logsource_key": "aws/cloudtrail",
+      "verdict": "resolved",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "every referenced field is present above the threshold",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1562",
+        "T1562.008"
+      ],
+      "action": "No action."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000b",
+      "title": "Administrator Policy Attached To Principal",
+      "path": "rules/cloudtrail/iam_policy_attached_admin.yml",
+      "logsource_key": "aws/cloudtrail",
+      "verdict": "resolved",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "every referenced field is present above the threshold",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1098",
+        "T1098.003"
+      ],
+      "action": "No action."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000c",
+      "title": "Access Key Created For Another User",
+      "path": "rules/cloudtrail/access_key_created_for_other_user.yml",
+      "logsource_key": "aws/cloudtrail",
+      "verdict": "resolved",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "every referenced field is present above the threshold",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1098",
+        "T1098.001"
+      ],
+      "action": "No action."
+    },
+    {
+      "rule_id": "6c4d2f10-1a7e-4a51-9f2d-2b3a1c9e000d",
+      "title": "GuardDuty Finding Suppressed Or Detector Disabled",
+      "path": "rules/cloudtrail/guardduty_suppressed.yml",
+      "logsource_key": "aws/cloudtrail",
+      "verdict": "resolved",
+      "missing_fields": [],
+      "rare_fields": [],
+      "shape_warnings": [],
+      "detail": "every referenced field is present above the threshold",
+      "branches_total": 1,
+      "branches_blocked": 0,
+      "condition_exact": true,
+      "techniques": [
+        "T1562",
+        "T1562.001"
+      ],
+      "action": "No action."
+    }
+  ]
+}

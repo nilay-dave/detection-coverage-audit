@@ -1,0 +1,934 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="Find ATT&CK techniques covered on paper but blind in production.">
+      
+      
+      
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.0">
+    
+    
+      
+        <title>Forensics audit: detection-coverage-audit at v0.3.0 - detection-coverage-audit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#forensics-audit-detection-coverage-audit-at-v030" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="detection-coverage-audit" class="md-header__button md-logo" aria-label="detection-coverage-audit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            detection-coverage-audit
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Forensics audit: detection-coverage-audit at v0.3.0
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="blue-grey" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="m17.75 4.09-2.53 1.94.91 3.06-2.63-1.81-2.63 1.81.91-3.06-2.53-1.94L12.44 4l1.06-3 1.06 3zm3.5 6.91-1.64 1.25.59 1.98-1.7-1.17-1.7 1.17.59-1.98L15.75 11l2.06-.05L18.5 9l.69 1.95zm-2.28 4.95c.83-.08 1.72 1.1 1.19 1.85-.32.45-.66.87-1.08 1.27C15.17 23 8.84 23 4.94 19.07c-3.91-3.9-3.91-10.24 0-14.14.4-.4.82-.76 1.27-1.08.75-.53 1.93.36 1.85 1.19-.27 2.86.69 5.83 2.89 8.02a9.96 9.96 0 0 0 8.02 2.89m-1.64 2.02a12.08 12.08 0 0 1-7.8-3.47c-2.17-2.19-3.33-5-3.49-7.82-2.81 3.14-2.7 7.96.31 10.98 3.02 3.01 7.84 3.12 10.98.31"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="blue-grey" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 7a5 5 0 0 1 5 5 5 5 0 0 1-5 5 5 5 0 0 1-5-5 5 5 0 0 1 5-5m0 2a3 3 0 0 0-3 3 3 3 0 0 0 3 3 3 3 0 0 0 3-3 3 3 0 0 0-3-3m0-7 2.39 3.42C13.65 5.15 12.84 5 12 5s-1.65.15-2.39.42zM3.34 7l4.16-.35A7.2 7.2 0 0 0 5.94 8.5c-.44.74-.69 1.5-.83 2.29zm.02 10 1.76-3.77a7.131 7.131 0 0 0 2.38 4.14zM20.65 7l-1.77 3.79a7.02 7.02 0 0 0-2.38-4.15zm-.01 10-4.14.36c.59-.51 1.12-1.14 1.54-1.86.42-.73.69-1.5.83-2.29zM12 22l-2.41-3.44c.74.27 1.55.44 2.41.44.82 0 1.63-.17 2.37-.44z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/__GITHUB_USERNAME__/detection-coverage-audit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    __GITHUB_USERNAME__/detection-coverage-audit
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="detection-coverage-audit" class="md-nav__button md-logo" aria-label="detection-coverage-audit" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    detection-coverage-audit
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/__GITHUB_USERNAME__/detection-coverage-audit" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    __GITHUB_USERNAME__/detection-coverage-audit
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../how-it-works/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    How the audit works
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../verdicts/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Verdicts
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Decisions
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Decisions
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/adr-001-sampled-field-presence/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-001 Sampled field presence
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/adr-002-duckdb-over-elasticsearch/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-002 DuckDB over Elasticsearch
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/adr-003-chunked-dataframe-insert/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-003 Chunked DataFrame insert
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/adr-004-bounded-batch-profiling/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-004 Bounded batch profiling
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../adr/adr-005-tolerant-yaml-over-pysigma/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    ADR-005 Tolerant YAML over pySigma
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../report.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Example report
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#persona-1-the-principal-engineer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persona 1: The Principal Engineer
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persona-2-the-ux-director-and-product-thinker" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persona 2: The UX Director and Product Thinker
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persona-3-the-hiring-manager" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persona 3: The Hiring Manager
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#persona-4-the-sceptic-provenance" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Persona 4: The Sceptic (provenance)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integrated-verdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integrated verdict
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integrated verdict">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#critical-failures-do-not-ship" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Critical failures (do not ship)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#impact-multipliers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Impact multipliers
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#elevator-pitch" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Elevator pitch
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="forensics-audit-detection-coverage-audit-at-v030">Forensics audit: detection-coverage-audit at v0.3.0<a class="headerlink" href="#forensics-audit-detection-coverage-audit-at-v030" title="Permanent link">&para;</a></h1>
+<p>Four personas, each auditing independently, then an integrated verdict. Graded
+PASS, WEAK or FAIL. Every FAIL found during this audit was fixed with its own
+commit before delivery, and the fix commits are named below.</p>
+<h2 id="persona-1-the-principal-engineer">Persona 1: The Principal Engineer<a class="headerlink" href="#persona-1-the-principal-engineer" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Grade</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Clone, run, verify</td>
+<td>PASS</td>
+<td>Tested literally, twice, in a clean directory from the README text alone. Failed the first time with <code>ModuleNotFoundError: No module named 'tests'</code>, fixed in <code>fix(test): put the repo root on pythonpath so a fresh clone verifies</code>, then re-tested: 100 tests pass in 8.4s with no network, no credentials and no containers.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Architecture and design decisions</td>
+<td>PASS</td>
+<td>Four packages with a real boundary each: <code>rules</code> reads detection content, <code>telemetry</code> measures what the corpus contains, <code>audit</code> joins them, <code>report</code> renders. The join is the only place the two halves meet, which is why adding an SPL parser touches one function. Five ADRs, each with rejected options.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Abstraction and configurability</td>
+<td>PASS</td>
+<td>Every tunable is on <code>Config</code>, sourced from the environment with validation that rejects out of range values. No module reads a literal path, threshold or field name. <code>BATCH_ROWS</code> is deliberately a module constant, not config, and the ADR says why.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Error handling and edge cases</td>
+<td>PASS</td>
+<td>Nine documented failure modes with detection, behaviour and recovery for each. Missing corpus, empty corpus, malformed schema and unparseable rule each have a distinct, tested path. The loader is tolerant by construction, which is a design decision with an ADR rather than an accident.</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Testing</td>
+<td>PASS</td>
+<td>100 tests, 99.2 percent branch coverage measured by pytest-cov, including regression tests for all nine bugs found during the build. The batch boundary test sweeps batch sizes 1, 2, 7, 50, 100, 101 and 1000 over a 101 event corpus.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="persona-2-the-ux-director-and-product-thinker">Persona 2: The UX Director and Product Thinker<a class="headerlink" href="#persona-2-the-ux-director-and-product-thinker" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Grade</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>First 30 seconds</td>
+<td>PASS</td>
+<td>Opens with the problem and a number, not with a technology. The bolded one-liner states what is found and the measured figure; the three bullets give pain, mechanism and result.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>The So What of results</td>
+<td>PASS</td>
+<td>The blind technique percentage is tied to a consequence in plain words: "Every one of those rules parses, deploys, maps to a technique, turns the heatmap green, and can never fire. Nobody finds out until an incident review asks why nothing alerted."</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Visual storytelling</td>
+<td>PASS after a fix</td>
+<td>Was WEAK. The performance chart plotted runtime against corpus size, which shows linear scaling that nobody disputes, while the surrounding prose claimed flat throughput. Replaced with a throughput bar chart in <code>docs(readme): chart throughput rather than runtime under load</code>. The architecture diagram labels the three boundaries where failures are handled; the HTML report leads with the headline number and themes for light and dark.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Actionability and handoff</td>
+<td>PASS</td>
+<td>Every finding in the report carries an action, and the mapping is a named table in code rather than prose. Future Work names the first metric to watch after deploying and says why the aggregate version of it would mislead.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="persona-3-the-hiring-manager">Persona 3: The Hiring Manager<a class="headerlink" href="#persona-3-the-hiring-manager" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Question</th>
+<th>Grade</th>
+<th>Justification</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Tutorial smell test</td>
+<td>PASS</td>
+<td>The problem is specific, current, and not in any tutorial: the gap between a coverage heatmap and the field names a log source actually populates. The Sysmon against EventID 4688 mismatch is a real failure mode in real estates.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Stolen Valor check</td>
+<td>PASS after a fix</td>
+<td>Was a FAIL. <code>pysigma</code> was declared in <code>pyproject.toml</code> and listed in the README tech stack table, and no module imported it: an advertised capability the code did not have. Removed in <code>fix(deps): drop pysigma, which was advertised but never imported</code>, after measuring what it would have done, with ADR-005 recording the measurement. The tech stack table now distinguishes what DuckDB provides, <code>json_tree</code> recursion, from what this project does with it, path reconstruction and shape detection.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Hardest problem solved</td>
+<td>PASS</td>
+<td>Two bugs that had been cancelling each other out since the first commit: a profiler that could not distinguish a literal dotted key from a nested path, and a generator that nested every dotted name. The writeup states plainly that a test would not have caught it, because the test would have shared the code's assumption. Both fix commits are linked.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>One thing I will remember</td>
+<td>PASS</td>
+<td>That the tool found a bug in its own test data by being made more precise, and that the author said so in the README instead of quietly fixing it.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="persona-4-the-sceptic-provenance">Persona 4: The Sceptic (provenance)<a class="headerlink" href="#persona-4-the-sceptic-provenance" title="Permanent link">&para;</a></h2>
+<p>Automated by <code>scripts/provenance_check.py</code>. Final run: <strong>25 pass, 2 weak, 0 fail
+across 27 checks.</strong></p>
+<p>Three FAILs were found and fixed during this audit:</p>
+<ol>
+<li><code>tools/check_dashes.py</code> held the forbidden characters as literals, so the one file whose job is to enforce the no-dash rule tripped its own check. Fixed in <code>fix(tools): build the dash table from code points not literals</code>.</li>
+<li><code>scripts/provenance_check.py</code> repeated the same mistake with a second copy of the table. Fixed by deleting the copy and delegating, in <code>fix(scripts): delegate the dash check instead of duplicating its table</code>.</li>
+<li>The package description was 121 characters, one over the profile grid limit. Fixed in <code>chore: trim the package description under the 120 character grid limit</code>.</li>
+</ol>
+<p>The two remaining WEAKs, both accepted with a reason:</p>
+<ul>
+<li><strong>8 commit subjects exceed 72 characters.</strong> Left alone rather than rewritten. Rewriting history to tidy prose invalidates every clone and commit reference for no functional gain. <code>tools/check_commit_subject.py</code> now runs as a commit-msg hook so the count cannot grow.</li>
+<li><strong>8 files still carry the identity placeholder.</strong> Expected: the repository was built before the GitHub account was known. <code>tools/set_identity.sh</code> binds every URL in one pass and has been tested twice in a scratch clone, including that it is idempotent and that it no longer rewrites its own search pattern.</li>
+</ul>
+<h2 id="integrated-verdict">Integrated verdict<a class="headerlink" href="#integrated-verdict" title="Permanent link">&para;</a></h2>
+<p><strong>Overall portfolio score: 9 out of 10.</strong></p>
+<p>The repository holds up to all four reads. History is 52 commits of real work
+with no padding and no date manipulation, three annotated tags with a changelog
+that covers each one, badges that read endpoints CI writes rather than static
+claims, and 30 published numbers verified against measured values by a CI job.
+Nine bugs were found during the build, each with a regression test, and the two
+most interesting ones are written up rather than hidden.</p>
+<p>It is a 9 and not a 10 because it has not been pushed yet: the Actions tab is
+not green because no run has happened, the releases are local tags rather than
+GitHub Releases, and the package is publish-ready rather than published. Those
+are the three things a sceptic checks that no amount of local work can satisfy.</p>
+<h3 id="critical-failures-do-not-ship">Critical failures (do not ship)<a class="headerlink" href="#critical-failures-do-not-ship" title="Permanent link">&para;</a></h3>
+<p>None outstanding. All four FAILs found during this audit were fixed with their
+own commits, named above, and the affected checks re-run.</p>
+<h3 id="impact-multipliers">Impact multipliers<a class="headerlink" href="#impact-multipliers" title="Permanent link">&para;</a></h3>
+<p>The three changes that would take this from a 9 to a 10, in order:</p>
+<ol>
+<li><strong>Push and publish.</strong> Green Actions tab, three GitHub Releases cut from the existing annotated tags, the docs site live on Pages so the badge endpoints resolve, and the package on PyPI through trusted publishing. This is the whole gap between 9 and 10 and none of it is more work than an afternoon.</li>
+<li><strong>Run it against one real rule pack.</strong> Vendoring the public SigmaHQ Windows rules at a pinned commit and publishing the blind technique percentage against a real corpus would replace the single most questionable thing in the repository, which is that every number is a simulation. The simulation is honestly labelled, but a real number is worth more than an honest simulation.</li>
+<li><strong>Ship field drift detection.</strong> Field presence per source is already computed every run and thrown away. Storing it would let the tool answer "which field did we silently stop collecting", which is the same class of failure arriving over time, and it is perhaps 200 lines on top of what exists.</li>
+</ol>
+<h3 id="elevator-pitch">Elevator pitch<a class="headerlink" href="#elevator-pitch" title="Permanent link">&para;</a></h3>
+<p>A coverage heatmap tells you a rule exists for a technique; it cannot tell you
+whether the field that rule keys on is in the telemetry you actually collect, and
+the gap between those two is where real intrusions go unnoticed. This tool joins
+Sigma rules to the field names measured in a telemetry export and reports which
+ATT&amp;CK techniques are green on the heatmap and blind in production, with a CI
+gate so coverage regressions fail a pull request. On the bundled example,</p>
+<!--number:audit.blind_technique_pct-->
+<p>63 percent of mapped
+techniques turn out to have no rule that could fire, mostly because public
+detection content is written for Sysmon field names and the estate collects
+Windows Security EventID 4688.</p>
+<p>Note on the figure: this audit was run at v0.3.0, when the number was 66.7
+percent. Condition aware resolution, merged after the audit, corrected one rule
+whose only missing field sat inside a filter clause, and the figure is now the
+value shown above. The pitch carries the tagged current number rather than the
+figure as it stood on the day.</p>
+<!--/number-->
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "content.code.copy", "toc.follow"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.c21346df.min.js"></script>
+      
+    
+  </body>
+</html>

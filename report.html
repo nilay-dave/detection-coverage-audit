@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Detection coverage audit</title>
+<style>
+  :root {
+    /* Contrast measured against the backgrounds they sit on, WCAG AA or better.
+       --muted was #5b6366 at 4.36:1 on --panel, which fails AA for body text. */
+    --bg: #ffffff; --fg: #141617; --muted: #4a5154; --line: #d8dcde;
+    --panel: #f5f6f7; --blind: #96201a; --warn: #6f4800; --ok: #17593a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #121415; --fg: #e8eaeb; --muted: #9aa2a5; --line: #2a2e30;
+      --panel: #1a1d1e; --blind: #ef6a5f; --warn: #d79b2b; --ok: #4fb183;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--muted); margin: 40px 0 12px; font-weight: 600; }
+  .sub { color: var(--muted); margin: 0 0 28px; font-size: 13px; }
+  .headline { border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px;
+    background: var(--panel); margin-bottom: 24px; }
+  .big { font-size: 46px; font-weight: 650; line-height: 1; color: var(--blind);
+    font-variant-numeric: tabular-nums; }
+  .big small { font-size: 20px; font-weight: 500; }
+  .headline p { margin: 10px 0 0; max-width: 66ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .tile { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; }
+  .tile .n { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tile .l { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--muted); border-bottom: 1px solid var(--line); padding: 8px 10px 8px 0; font-weight: 600; }
+  td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  code { font: 12.5px ui-monospace, SFMono-Regular, Menlo, monospace;
+    background: var(--panel); padding: 1px 5px; border-radius: 4px; }
+  .v { font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .v-no_source, .v-missing_field, .v-unparseable { color: var(--blind); }
+  .v-rare_field, .v-keyword_only { color: var(--warn); }
+  .v-resolved { color: var(--ok); }
+  .tags { color: var(--muted); font-size: 12px; }
+  .act { color: var(--muted); font-size: 12.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; list-style: none;
+    padding: 0; margin: 0; }
+  .chip { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+    font: 12.5px ui-monospace, monospace; }
+  footer { margin-top: 44px; padding-top: 16px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 12.5px; }
+  caption { text-align: left; font-size: 12.5px; color: var(--muted);
+    padding-bottom: 10px; }
+  .skip { position: absolute; left: -9999px; top: 0; background: var(--bg);
+    color: var(--fg); padding: 10px 14px; border: 1px solid var(--line);
+    border-radius: 6px; z-index: 10; }
+  .skip:focus { left: 8px; top: 8px; }
+  a:focus-visible, .skip:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+  /* A glyph before each verdict so severity is not carried by colour alone. */
+  .v::before { font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .v-no_source::before, .v-missing_field::before, .v-unparseable::before { content: "x"; }
+  .v-rare_field::before, .v-keyword_only::before { content: "!"; }
+  .v-resolved::before { content: "ok"; font-size: 10px; }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<a class="skip" href="#findings">Skip to findings</a>
+<div class="wrap">
+  <h1>Detection coverage audit</h1>
+  <p class="sub">
+    18 rules against 200,000 events
+    across 6 observed log sources.
+  </p>
+
+  <div class="headline">
+    <div class="big" role="img"
+         aria-label="62.96 percent of mapped techniques are blind">
+      62.96<small>%</small>
+    </div>
+    <p>
+      of the 27 ATT&amp;CK techniques these rules claim to cover have
+      no rule that could fire on the observed telemetry. That is
+      17 techniques
+      that a coverage heatmap would show as green.
+    </p>
+  </div>
+
+  <div class="grid" role="list" aria-label="Finding counts by verdict">
+    <div class="tile" role="listitem"><div class="n">6</div><div class="l">Resolved</div></div>
+    <div class="tile" role="listitem"><div class="n">7</div><div class="l">Missing field</div></div>
+    <div class="tile" role="listitem"><div class="n">5</div><div class="l">No source</div></div>
+    <div class="tile" role="listitem"><div class="n">0</div><div class="l">Rare field</div></div>
+    <div class="tile" role="listitem"><div class="n">0</div><div class="l">Keyword only</div></div>
+    <div class="tile" role="listitem"><div class="n">1</div><div class="l">Unparseable</div></div>
+  </div>
+
+  <h2>Blind techniques</h2>
+  <ul class="chips" aria-label="Techniques with no rule that can fire">
+<li class="chip">T1003</li><li class="chip">T1003.001</li><li class="chip">T1048</li><li class="chip">T1048.003</li><li class="chip">T1053</li><li class="chip">T1053.005</li><li class="chip">T1059</li><li class="chip">T1059.001</li><li class="chip">T1204</li><li class="chip">T1204.002</li><li class="chip">T1546</li><li class="chip">T1546.003</li><li class="chip">T1548</li><li class="chip">T1548.002</li><li class="chip">T1573</li><li class="chip">T1573.002</li><li class="chip">T1621</li>  </ul>
+
+  <h2 id="findings">Findings</h2>
+  <table>
+    <caption>
+      One row per rule, most severe first. The verdict column carries a glyph and
+      a word as well as a colour.
+    </caption>
+    <thead>
+      <tr><th>Verdict</th><th>Rule</th><th>Log source</th><th>Detail</th><th>Action</th></tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Encoded PowerShell Command Line
+<div class="tags">T1059, T1059.001</div>        </td>
+        <td><code>windows/process_creation</code></td>
+        <td>
+          1 of 2 referenced fields never appear in windows/process_creation
+          <div class="tags">absent: <code>Image</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Scheduled Task Created By Non Admin Path
+<div class="tags">T1053, T1053.005</div>        </td>
+        <td><code>windows/process_creation</code></td>
+        <td>
+          1 of 2 referenced fields never appear in windows/process_creation
+          <div class="tags">absent: <code>Image</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Office Application Spawning Script Interpreter
+<div class="tags">T1204, T1204.002</div>        </td>
+        <td><code>windows/process_creation</code></td>
+        <td>
+          2 of 2 referenced fields never appear in windows/process_creation
+          <div class="tags">absent: <code>Image</code> <code>ParentImage</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Defender Exclusion Added Via Registry
+<div class="tags">T1562, T1562.001</div>        </td>
+        <td><code>windows/registry_set</code></td>
+        <td>
+          2 of 2 referenced fields never appear in windows/registry_set
+          <div class="tags">absent: <code>Details</code> <code>TargetObject</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Elevated Process From Medium Integrity Parent
+<div class="tags">T1548, T1548.002</div>        </td>
+        <td><code>windows/process_creation</code></td>
+        <td>
+          2 of 2 referenced fields never appear in windows/process_creation
+          <div class="tags">absent: <code>IntegrityLevel</code> <code>ParentIntegrityLevel</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Possible DNS Tunneling Via Long Labels
+<div class="tags">T1048, T1048.003</div>        </td>
+        <td><code>zeek/dns</code></td>
+        <td>
+          1 of 2 referenced fields never appear in zeek/dns
+          <div class="tags">absent: <code>query_length</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-missing_field">missing field</td>
+        <td>
+          Self Signed TLS Certificate To Rare Destination
+<div class="tags">T1573, T1573.002</div>        </td>
+        <td><code>zeek/ssl</code></td>
+        <td>
+          1 of 2 referenced fields never appear in zeek/ssl
+          <div class="tags">absent: <code>dest_asn_rarity</code> </div>
+        </td>
+        <td class="act">Rewrite the rule against the field names this source emits, or extend the pipeline.</td>
+      </tr>
+      <tr>
+        <td class="v v-no_source">no source</td>
+        <td>
+          LSASS Process Memory Access
+<div class="tags">T1003, T1003.001</div>        </td>
+        <td><code>windows/process_access</code></td>
+        <td>
+          log source windows/process_access produced no events in the corpus
+        </td>
+        <td class="act">Onboard the log source, or retire the rule.</td>
+      </tr>
+      <tr>
+        <td class="v v-no_source">no source</td>
+        <td>
+          WMI Event Subscription Persistence
+<div class="tags">T1546, T1546.003</div>        </td>
+        <td><code>windows/wmi_event</code></td>
+        <td>
+          log source windows/wmi_event produced no events in the corpus
+        </td>
+        <td class="act">Onboard the log source, or retire the rule.</td>
+      </tr>
+      <tr>
+        <td class="v v-no_source">no source</td>
+        <td>
+          Write To Administrative SMB Share
+<div class="tags">T1021, T1021.002</div>        </td>
+        <td><code>zeek/smb_files</code></td>
+        <td>
+          log source zeek/smb_files produced no events in the corpus
+        </td>
+        <td class="act">Onboard the log source, or retire the rule.</td>
+      </tr>
+      <tr>
+        <td class="v v-no_source">no source</td>
+        <td>
+          Repeated MFA Push Denials
+<div class="tags">T1621</div>        </td>
+        <td><code>okta/system</code></td>
+        <td>
+          log source okta/system produced no events in the corpus
+        </td>
+        <td class="act">Onboard the log source, or retire the rule.</td>
+      </tr>
+      <tr>
+        <td class="v v-no_source">no source</td>
+        <td>
+          Okta Suspicious Activity Reported
+<div class="tags">T1078</div>        </td>
+        <td><code>okta/system</code></td>
+        <td>
+          log source okta/system produced no events in the corpus
+        </td>
+        <td class="act">Onboard the log source, or retire the rule.</td>
+      </tr>
+      <tr>
+        <td class="v v-unparseable">unparseable</td>
+        <td>
+          broken_rule_no_detection.yml
+        </td>
+        <td><code>unknown</code></td>
+        <td>
+          rule has no detection block
+        </td>
+        <td class="act">Fix or delete the rule file.</td>
+      </tr>
+      <tr>
+        <td class="v v-resolved">resolved</td>
+        <td>
+          Remote Service Creation
+<div class="tags">T1021, T1021.002</div>        </td>
+        <td><code>windows/system</code></td>
+        <td>
+          every referenced field is present above the threshold
+        </td>
+        <td class="act">No action.</td>
+      </tr>
+      <tr>
+        <td class="v v-resolved">resolved</td>
+        <td>
+          AWS Root Account Console Login
+<div class="tags">T1078, T1078.004</div>        </td>
+        <td><code>aws/cloudtrail</code></td>
+        <td>
+          every referenced field is present above the threshold
+        </td>
+        <td class="act">No action.</td>
+      </tr>
+      <tr>
+        <td class="v v-resolved">resolved</td>
+        <td>
+          CloudTrail Logging Stopped
+<div class="tags">T1562, T1562.008</div>        </td>
+        <td><code>aws/cloudtrail</code></td>
+        <td>
+          every referenced field is present above the threshold
+        </td>
+        <td class="act">No action.</td>
+      </tr>
+      <tr>
+        <td class="v v-resolved">resolved</td>
+        <td>
+          Administrator Policy Attached To Principal
+<div class="tags">T1098, T1098.003</div>        </td>
+        <td><code>aws/cloudtrail</code></td>
+        <td>
+          every referenced field is present above the threshold
+        </td>
+        <td class="act">No action.</td>
+      </tr>
+      <tr>
+        <td class="v v-resolved">resolved</td>
+        <td>
+          Access Key Created For Another User
+<div class="tags">T1098, T1098.001</div>        </td>
+        <td><code>aws/cloudtrail</code></td>
+        <td>
+          every referenced field is present above the threshold
+        </td>
+        <td class="act">No action.</td>
+      </tr>
+      <tr>
+        <td class="v v-resolved">resolved</td>
+        <td>
+          GuardDuty Finding Suppressed Or Detector Disabled
+<div class="tags">T1562, T1562.001</div>        </td>
+        <td><code>aws/cloudtrail</code></td>
+        <td>
+          every referenced field is present above the threshold
+        </td>
+        <td class="act">No action.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <footer>
+    Observed log sources: <code>aws/cloudtrail</code> <code>windows/process_creation</code> <code>windows/registry_set</code> <code>windows/system</code> <code>zeek/dns</code> <code>zeek/ssl</code>     <br>
+    Numbers on this page are measured from the corpus named above. When that corpus is the bundled
+    synthetic one, every number is a simulation.
+  </footer>
+</div>
+</body>
+</html>
